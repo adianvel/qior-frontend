@@ -1,24 +1,48 @@
 # Qior Frontend
 
-Landing page for **Qior** — a Solana token distribution protocol that locks tokens in escrow and releases them over time through transparent vesting.
+Frontend for **Qior**, a Solana token distribution and vesting protocol. Qior lets creators lock SPL tokens in escrow and release them to recipients through transparent vesting schedules on Solana devnet.
 
 ## Tech Stack
 
-- **Next.js 16** (App Router, TypeScript)
-- **Tailwind CSS v4**
-- **Framer Motion** (scroll-triggered animations)
-- **Phosphor Icons**
+- Next.js 16 with App Router and TypeScript
+- Tailwind CSS v4
+- Framer Motion
+- Phosphor Icons
+- Solana Wallet Adapter
+- Anchor client
+- TanStack Query
 
-## Sections
+## Features
 
-1. **Hero** — headline, CTAs, 3D vault background
-2. **Problem** — pain points with icon cards
-3. **How It Works** — Lock, Vest, Claim flow
-4. **Features** — 4-column feature grid
-5. **Product Preview** — dashboard mockup
-6. **Use Cases** — audience cards
-7. **For Developers** — code editor + SDK example
-8. **CTA + Footer** — final call-to-action
+- Landing page with 8 product sections
+- Wallet-gated app shell
+- Creator dashboard for created vesting streams
+- Recipient dashboard for incoming streams and withdrawals
+- Create-stream form wired to the on-chain program
+- Stream detail page with on-chain account loading and cancel action
+- Phantom and Solflare wallet support
+
+## Routes
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Marketing landing page |
+| `/dashboard/creator` | Streams created by the connected wallet |
+| `/dashboard/recipient` | Streams where the connected wallet is recipient |
+| `/create` | Create a new token vesting stream |
+| `/streams/[streamId]` | View and manage a stream account |
+
+## Environment
+
+Create `.env.local`:
+
+```bash
+NEXT_PUBLIC_SOLANA_CLUSTER=devnet
+NEXT_PUBLIC_PROGRAM_ID=BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9
+NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
+```
+
+For production, set the same variables in Vercel. Use a dedicated RPC provider for better reliability.
 
 ## Getting Started
 
@@ -29,7 +53,21 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Quality Checks
+
+```bash
+npm run lint
+npm run build
+```
+
+Current status:
+
+- Lint passes.
+- Production build passes.
+- Devnet program is deployed at `BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9`.
+- End-to-end create, withdraw, and cancel testing requires an interactive devnet wallet with SOL and SPL token balance.
+
 ## Related
 
 - Smart contract repo: [mancer-team2/programs](https://github.com/mancer-team2/programs)
-- Program ID (devnet): `BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9`
+- Frontend repo: [mancer-team2/frontend](https://github.com/mancer-team2/frontend)

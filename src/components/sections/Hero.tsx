@@ -25,7 +25,7 @@ export function Hero() {
           <a href="#use-cases" className="hover:text-white transition-colors">About</a>
         </div>
         <a
-          href="#"
+          href="/dashboard/creator"
           className="hidden md:inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium text-white border border-zinc-700 rounded-lg hover:bg-white/5 active:scale-[0.97] transition-all"
         >
           Launch App <ArrowUpRight size={14} weight="bold" />
@@ -68,7 +68,7 @@ export function Hero() {
           className="flex items-center gap-4 mt-10"
         >
           <a
-            href="#"
+            href="/dashboard/creator"
             className="inline-flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-sm font-semibold rounded-lg active:scale-[0.97] active:-translate-y-[1px] transition-all"
           >
             Launch App <ArrowUpRight size={14} weight="bold" />

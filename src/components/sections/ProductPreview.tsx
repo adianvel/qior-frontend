@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight, House, Pulse, Coins, ChartLine, Gear, Plus } from "@phosphor-icons/react";
+import { House, Pulse, Coins, ChartLine, Gear, Plus } from "@phosphor-icons/react";
 
 const navItems = [
   { icon: House, label: "Overview", active: false },
