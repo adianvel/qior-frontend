@@ -34,15 +34,15 @@ Frontend for **Qior**, a Solana token distribution and vesting protocol. Qior le
 
 ## Environment
 
-Create `.env.local`:
+The app requires public environment variables. Create `.env.local` for local development and set the same variables in Vercel:
 
 ```bash
 NEXT_PUBLIC_SOLANA_CLUSTER=devnet
 NEXT_PUBLIC_PROGRAM_ID=BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9
-NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
+NEXT_PUBLIC_RPC_URL=<your-devnet-rpc-url>
 ```
 
-For production, set the same variables in Vercel. Use a dedicated RPC provider for better reliability.
+Use a dedicated RPC provider for better reliability. The frontend does not provide fallback values for these variables.
 
 ## Getting Started
 

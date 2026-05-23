@@ -3,10 +3,9 @@ import { Connection, PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { IDL } from "./idl";
+import { PROGRAM_ID_STRING } from "@/lib/env";
 
-export const PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_PROGRAM_ID || "BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9"
-);
+export const PROGRAM_ID = new PublicKey(PROGRAM_ID_STRING);
 
 export function getProvider(connection: Connection, wallet: AnchorWallet) {
   return new AnchorProvider(connection, wallet, { commitment: "confirmed" });
@@ -16,7 +15,7 @@ export function getProvider(connection: Connection, wallet: AnchorWallet) {
 export function getProgram(connection: Connection, wallet: AnchorWallet): any {
   const provider = getProvider(connection, wallet);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new Program(IDL as any, provider);
+  return new Program({ ...IDL, address: PROGRAM_ID_STRING } as any, provider);
 }
 
 export function getStreamPDA(creator: PublicKey, recipient: PublicKey, streamId: BN) {

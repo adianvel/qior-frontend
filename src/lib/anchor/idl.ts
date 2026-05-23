@@ -1,5 +1,4 @@
 export type TdpSolana = {
-  address: "BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9";
   version: "0.1.0";
   name: "tdp_solana";
   instructions: [
@@ -90,7 +89,6 @@ export type TdpSolana = {
 };
 
 export const IDL: TdpSolana = {
-  address: "BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9",
   version: "0.1.0",
   name: "tdp_solana",
   instructions: [

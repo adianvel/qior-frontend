@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import { SOLANA_CLUSTER } from "@/lib/env";
 
 export function shortenAddress(address: string | PublicKey, chars = 4): string {
   const str = address.toString();
@@ -54,10 +55,10 @@ export function getStreamStatus(stream: {
   return "active";
 }
 
-export function explorerUrl(signature: string, cluster = "devnet"): string {
+export function explorerUrl(signature: string, cluster = SOLANA_CLUSTER): string {
   return `https://explorer.solana.com/tx/${signature}?cluster=${cluster}`;
 }
 
-export function explorerAccountUrl(address: string | PublicKey, cluster = "devnet"): string {
+export function explorerAccountUrl(address: string | PublicKey, cluster = SOLANA_CLUSTER): string {
   return `https://explorer.solana.com/address/${address.toString()}?cluster=${cluster}`;
 }
