@@ -52,13 +52,15 @@ export function CtaFooter() {
             className="flex items-center gap-4 mt-10"
           >
             <a
-              href="#"
+              href="/dashboard/creator"
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-sm font-semibold rounded-lg active:scale-[0.97] active:-translate-y-[1px] transition-all"
             >
               Launch App <ArrowUpRight size={14} weight="bold" />
             </a>
             <a
-              href="#"
+              href="https://github.com/mancer-team2/programs"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center px-7 py-3.5 border border-zinc-300 hover:border-zinc-400 text-zinc-700 text-sm font-medium rounded-lg active:scale-[0.97] transition-all bg-white/60 backdrop-blur-sm"
             >
               Explore Docs
