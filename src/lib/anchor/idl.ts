@@ -17,7 +17,7 @@ export type TdpSolana = {
       ];
       args: [
         { name: "streamId"; type: "u64" },
-        { name: "recipient"; type: "publicKey" },
+        { name: "recipient"; type: "pubkey" },
         { name: "totalAmount"; type: "u64" },
         { name: "startTime"; type: "i64" },
         { name: "cliffTime"; type: "i64" },
@@ -65,10 +65,10 @@ export type TdpSolana = {
       type: {
         kind: "struct";
         fields: [
-          { name: "creator"; type: "publicKey" },
-          { name: "recipient"; type: "publicKey" },
-          { name: "mint"; type: "publicKey" },
-          { name: "escrowTokenAccount"; type: "publicKey" },
+          { name: "creator"; type: "pubkey" },
+          { name: "recipient"; type: "pubkey" },
+          { name: "mint"; type: "pubkey" },
+          { name: "escrowTokenAccount"; type: "pubkey" },
           { name: "streamId"; type: "u64" },
           { name: "totalAmount"; type: "u64" },
           { name: "withdrawnAmount"; type: "u64" },
@@ -107,7 +107,7 @@ export const IDL: TdpSolana = {
       ],
       args: [
         { name: "streamId", type: "u64" },
-        { name: "recipient", type: "publicKey" },
+        { name: "recipient", type: "pubkey" },
         { name: "totalAmount", type: "u64" },
         { name: "startTime", type: "i64" },
         { name: "cliffTime", type: "i64" },
@@ -155,10 +155,10 @@ export const IDL: TdpSolana = {
       type: {
         kind: "struct",
         fields: [
-          { name: "creator", type: "publicKey" },
-          { name: "recipient", type: "publicKey" },
-          { name: "mint", type: "publicKey" },
-          { name: "escrowTokenAccount", type: "publicKey" },
+          { name: "creator", type: "pubkey" },
+          { name: "recipient", type: "pubkey" },
+          { name: "mint", type: "pubkey" },
+          { name: "escrowTokenAccount", type: "pubkey" },
           { name: "streamId", type: "u64" },
           { name: "totalAmount", type: "u64" },
           { name: "withdrawnAmount", type: "u64" },
