@@ -1,18 +1,36 @@
 "use client";
 
-import { Wallet, SpinnerGap, CheckCircle } from "@phosphor-icons/react";
+import { Wallet, SpinnerGap, CheckCircle, WarningCircle } from "@phosphor-icons/react";
 import { useStreams } from "@/hooks/useStreams";
 import { useWithdraw } from "@/hooks/useWithdraw";
-import { getStreamStatus, getClaimableAmount, formatTokenAmount, shortenAddress } from "@/lib/utils/format";
+import { getStreamStatus, getClaimableAmount, formatTokenAmount, shortenAddress, formatTimeRemaining } from "@/lib/utils/format";
 
 export default function RecipientDashboardPage() {
-  const { data: streams, isLoading } = useStreams("recipient");
+  const { data: streams, isLoading, error, refetch } = useStreams("recipient");
   const { withdraw, status: withdrawStatus, error: withdrawError } = useWithdraw();
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <SpinnerGap size={32} className="animate-spin text-violet-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center">
+        <WarningCircle size={48} weight="duotone" className="text-red-400" />
+        <h2 className="text-lg font-semibold text-zinc-900">Couldn&apos;t load incoming streams</h2>
+        <p className="text-sm text-zinc-500 max-w-sm">
+          The devnet RPC request failed. Check your RPC environment variable and try again.
+        </p>
+        <button
+          onClick={() => refetch()}
+          className="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg active:scale-[0.97] transition-all"
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -54,6 +72,7 @@ export default function RecipientDashboardPage() {
                 <div>
                   <p className="text-xs text-zinc-400">From</p>
                   <p className="text-sm font-mono text-zinc-900">{shortenAddress(stream.creator, 6)}</p>
+                  <p className="text-xs font-mono text-zinc-400 mt-1">{formatTimeRemaining(stream.endTime)}</p>
                 </div>
                 <span
                   className={`text-xs font-medium px-2 py-0.5 rounded-md ${

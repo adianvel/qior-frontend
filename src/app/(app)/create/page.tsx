@@ -46,8 +46,7 @@ export default function CreateStreamPage() {
     await create({
       recipient,
       mint,
-      amount: parseFloat(amount),
-      decimals: 6,
+      amount,
       startTime: start,
       cliffTime: cliff,
       endTime: end,
