@@ -174,8 +174,12 @@ export default function CreateStreamPage() {
           disabled={status === "signing" || status === "confirming"}
           className="flex items-center justify-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg active:scale-[0.97] active:-translate-y-[1px] transition-all mt-2"
         >
-          {status === "signing" || status === "confirming" ? (
-            <><SpinnerGap size={16} className="animate-spin" /> {status === "signing" ? "Approve in wallet..." : "Confirming..."}</>
+          {status === "preparing" || status === "signing" || status === "confirming" ? (
+            <><SpinnerGap size={16} className="animate-spin" /> {
+              status === "preparing" ? "Preparing transaction..." :
+              status === "signing" ? "Approve in wallet..." :
+              "Confirming..."
+            }</>
           ) : (
             <>Create Stream <ArrowRight size={14} weight="bold" /></>
           )}

@@ -18,7 +18,23 @@ export type CreateStreamParams = {
   cancelable: boolean;
 };
 
-export type TxStatus = "idle" | "signing" | "confirming" | "success" | "error";
+export type TxStatus = "idle" | "preparing" | "signing" | "confirming" | "success" | "error";
+
+function withTimeout<T>(promise: Promise<T>, message: string, ms = 15_000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error(message)), ms);
+
+    promise
+      .then((value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+  });
+}
 
 export function useCreateStream() {
   const { connection } = useConnection();
@@ -33,7 +49,7 @@ export function useCreateStream() {
       setError("Wallet not connected");
       return;
     }
-    setStatus("signing");
+    setStatus("preparing");
     setError("");
 
     try {
@@ -41,7 +57,11 @@ export function useCreateStream() {
       const streamId = new BN(Date.now()); // unique stream ID
       const recipient = new PublicKey(params.recipient);
       const mint = new PublicKey(params.mint);
-      const mintInfo = await getMint(connection, mint);
+
+      const mintInfo = await withTimeout(
+        getMint(connection, mint),
+        "Token mint lookup timed out. Check the mint address and RPC connection."
+      );
       const totalAmount = new BN(toRawTokenAmount(params.amount, mintInfo.decimals).toString());
 
       const { tx, signers } = await createStreamTx(program, wallet.publicKey, {
@@ -55,13 +75,18 @@ export function useCreateStream() {
         cancelable: params.cancelable,
       });
 
-      setStatus("confirming");
+      setStatus("signing");
       const sig = await sendTransaction(tx, connection, { signers });
+      setStatus("confirming");
       await connection.confirmTransaction(sig, "confirmed");
       setSignature(sig);
       setStatus("success");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Transaction failed";
+      const msg = err instanceof Error
+        ? err.message.includes("Invalid account data")
+          ? "Invalid token mint address. Use an existing SPL token mint on devnet."
+          : err.message
+        : "Transaction failed";
       setError(msg);
       setStatus("error");
     }
