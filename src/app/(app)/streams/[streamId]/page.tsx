@@ -56,8 +56,8 @@ export default function StreamDetailPage() {
         endTime: decoded.endTime?.toNumber?.() ?? 0,
         cancelable: decoded.cancelable,
         canceled: decoded.canceled,
-        milestoneBased: decoded.milestoneBased,
-        milestoneReached: decoded.milestoneReached,
+        milestoneBased: false,
+        milestoneReached: false,
         bump: decoded.bump,
         escrowBump: decoded.escrowBump,
       } as StreamAccount;

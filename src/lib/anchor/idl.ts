@@ -31,8 +31,6 @@ export type TdpSolana = {
           { name: "endTime"; type: "i64" },
           { name: "cancelable"; type: "bool" },
           { name: "canceled"; type: "bool" },
-          { name: "milestoneBased"; type: "bool" },
-          { name: "milestoneReached"; type: "bool" },
           { name: "bump"; type: "u8" },
           { name: "escrowBump"; type: "u8" },
           { name: "createdAt"; type: "i64" }
@@ -130,8 +128,6 @@ export const IDL: TdpSolana = {
           { name: "endTime", type: "i64" },
           { name: "cancelable", type: "bool" },
           { name: "canceled", type: "bool" },
-          { name: "milestoneBased", type: "bool" },
-          { name: "milestoneReached", type: "bool" },
           { name: "bump", type: "u8" },
           { name: "escrowBump", type: "u8" },
           { name: "createdAt", type: "i64" },
