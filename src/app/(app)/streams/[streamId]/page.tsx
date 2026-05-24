@@ -40,7 +40,7 @@ export default function StreamDetailPage() {
       if (!account) throw new Error("Stream account not found");
 
       const program = getProgram(connection, wallet);
-      const decoded = program.coder.accounts.decode("Stream", account.data);
+      const decoded = program.coder.accounts.decode("stream", account.data);
 
       return {
         publicKey: streamPublicKey,

@@ -25,7 +25,7 @@ export function useStreams(role: "creator" | "recipient") {
       });
 
       return accounts.map((acc) => {
-        const decoded = program.coder.accounts.decode("Stream", acc.account.data);
+        const decoded = program.coder.accounts.decode("stream", acc.account.data);
         return {
           publicKey: acc.pubkey,
           creator: decoded.creator,
