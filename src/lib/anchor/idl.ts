@@ -4,6 +4,7 @@ export type TdpSolana = {
   instructions: [
     {
       name: "createStream";
+      discriminator: number[];
       accounts: [
         { name: "creator"; isMut: true; isSigner: true },
         { name: "stream"; isMut: true; isSigner: false },
@@ -28,6 +29,7 @@ export type TdpSolana = {
     },
     {
       name: "withdraw";
+      discriminator: number[];
       accounts: [
         { name: "recipient"; isMut: true; isSigner: true },
         { name: "stream"; isMut: true; isSigner: false },
@@ -43,6 +45,7 @@ export type TdpSolana = {
     },
     {
       name: "cancelStream";
+      discriminator: number[];
       accounts: [
         { name: "creator"; isMut: true; isSigner: true },
         { name: "recipientAuthority"; isMut: false; isSigner: false },
@@ -100,6 +103,7 @@ export const IDL: TdpSolana = {
   instructions: [
     {
       name: "createStream",
+      discriminator: [71, 188, 111, 127, 108, 40, 229, 158],
       accounts: [
         { name: "creator", isMut: true, isSigner: true },
         { name: "stream", isMut: true, isSigner: false },
@@ -124,6 +128,7 @@ export const IDL: TdpSolana = {
     },
     {
       name: "withdraw",
+      discriminator: [183, 18, 70, 156, 148, 109, 161, 34],
       accounts: [
         { name: "recipient", isMut: true, isSigner: true },
         { name: "stream", isMut: true, isSigner: false },
@@ -139,6 +144,7 @@ export const IDL: TdpSolana = {
     },
     {
       name: "cancelStream",
+      discriminator: [218, 221, 38, 25, 177, 207, 188, 91],
       accounts: [
         { name: "creator", isMut: true, isSigner: true },
         { name: "recipientAuthority", isMut: false, isSigner: false },
