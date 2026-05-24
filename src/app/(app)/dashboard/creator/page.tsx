@@ -1,17 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { PlusCircle, Stack, SpinnerGap } from "@phosphor-icons/react";
+import { PlusCircle, Stack, SpinnerGap, WarningCircle } from "@phosphor-icons/react";
 import { useStreams } from "@/hooks/useStreams";
-import { getStreamStatus, formatTokenAmount, shortenAddress } from "@/lib/utils/format";
+import { getStreamStatus, formatTokenAmount, shortenAddress, formatTimeRemaining } from "@/lib/utils/format";
 
 export default function CreatorDashboardPage() {
-  const { data: streams, isLoading } = useStreams("creator");
+  const { data: streams, isLoading, error, refetch } = useStreams("creator");
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <SpinnerGap size={32} className="animate-spin text-violet-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center">
+        <WarningCircle size={48} weight="duotone" className="text-red-400" />
+        <h2 className="text-lg font-semibold text-zinc-900">Couldn&apos;t load streams</h2>
+        <p className="text-sm text-zinc-500 max-w-sm">
+          The devnet RPC request failed. Check your RPC environment variable and try again.
+        </p>
+        <button
+          onClick={() => refetch()}
+          className="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg active:scale-[0.97] transition-all"
+        >
+          Retry
+        </button>
       </div>
     );
   }
@@ -75,11 +93,12 @@ export default function CreatorDashboardPage() {
 
       {/* Table */}
       <div className="border border-zinc-200 rounded-xl bg-white overflow-hidden">
-        <div className="grid grid-cols-[1.5fr_1fr_1fr_0.8fr_0.6fr] gap-3 px-5 py-3 border-b border-zinc-100 text-[11px] text-zinc-400 uppercase tracking-wide">
+        <div className="grid grid-cols-[1.4fr_0.9fr_0.9fr_0.8fr_0.9fr_0.6fr] gap-3 px-5 py-3 border-b border-zinc-100 text-[11px] text-zinc-400 uppercase tracking-wide">
           <span>Recipient</span>
           <span>Total</span>
           <span>Withdrawn</span>
           <span>Progress</span>
+          <span>Time Left</span>
           <span>Status</span>
         </div>
         {streams.map((stream) => {
@@ -89,7 +108,7 @@ export default function CreatorDashboardPage() {
             <Link
               key={stream.publicKey.toBase58()}
               href={`/streams/${stream.publicKey.toBase58()}`}
-              className="grid grid-cols-[1.5fr_1fr_1fr_0.8fr_0.6fr] gap-3 items-center px-5 py-3.5 border-b border-zinc-50 hover:bg-zinc-50/50 transition-colors text-sm"
+              className="grid grid-cols-[1.4fr_0.9fr_0.9fr_0.8fr_0.9fr_0.6fr] gap-3 items-center px-5 py-3.5 border-b border-zinc-50 hover:bg-zinc-50/50 transition-colors text-sm"
             >
               <span className="text-zinc-900 font-mono text-xs">{shortenAddress(stream.recipient, 6)}</span>
               <span className="text-zinc-600 font-mono text-xs">{formatTokenAmount(stream.totalAmount, 6)}</span>
@@ -100,6 +119,7 @@ export default function CreatorDashboardPage() {
                 </div>
                 <span className="text-[11px] text-zinc-500 font-mono">{pct}%</span>
               </div>
+              <span className="text-zinc-500 font-mono text-xs">{formatTimeRemaining(stream.endTime)}</span>
               <span
                 className={`text-xs font-medium ${
                   status === "active" ? "text-emerald-500" : status === "completed" ? "text-violet-500" : "text-zinc-400"

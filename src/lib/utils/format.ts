@@ -20,6 +20,31 @@ export function formatDate(timestamp: number): string {
   });
 }
 
+export function formatTimeRemaining(endTime: number, now = Math.floor(Date.now() / 1000)): string {
+  const seconds = endTime - now;
+
+  if (seconds <= 0) return "Ended";
+
+  const days = Math.floor(seconds / 86_400);
+  if (days > 0) return `${days}d remaining`;
+
+  const hours = Math.floor(seconds / 3_600);
+  if (hours > 0) return `${hours}h remaining`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes > 0) return `${minutes}m remaining`;
+
+  return "Less than 1m remaining";
+}
+
+export function toRawTokenAmount(amount: string, decimals: number): bigint {
+  const [wholePart, fractionalPart = ""] = amount.trim().split(".");
+  const whole = wholePart || "0";
+  const fraction = fractionalPart.padEnd(decimals, "0").slice(0, decimals);
+
+  return BigInt(whole) * BigInt(10) ** BigInt(decimals) + BigInt(fraction || "0");
+}
+
 export function getVestedAmount(
   totalAmount: number,
   startTime: number,

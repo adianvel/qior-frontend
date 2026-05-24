@@ -10,9 +10,11 @@ import { ArrowLeft, Copy, ArrowSquareOut, SpinnerGap, WarningCircle } from "@pho
 import { getProgram } from "@/lib/anchor/program";
 import type { StreamAccount } from "@/lib/anchor/types";
 import { useCancelStream } from "@/hooks/useCancelStream";
+import { useWithdraw } from "@/hooks/useWithdraw";
 import {
   explorerAccountUrl,
   formatDate,
+  formatTimeRemaining,
   formatTokenAmount,
   getClaimableAmount,
   getStreamStatus,
@@ -26,6 +28,7 @@ export default function StreamDetailPage() {
   const { publicKey } = useWallet();
   const [showCancelModal, setShowCancelModal] = useState(false);
   const { cancel, status: cancelStatus, error: cancelError } = useCancelStream();
+  const { withdraw, status: withdrawStatus, error: withdrawError } = useWithdraw();
 
   const { data: stream, isLoading, error } = useQuery<StreamAccount>({
     queryKey: ["stream", params.streamId, wallet?.publicKey?.toBase58()],
@@ -128,6 +131,11 @@ export default function StreamDetailPage() {
           {cancelError}
         </div>
       )}
+      {withdrawError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {withdrawError}
+        </div>
+      )}
 
       <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-5">
         <div className="mb-2 flex justify-between text-sm">
@@ -205,17 +213,34 @@ export default function StreamDetailPage() {
               <p className="text-xs text-zinc-700">{formatDate(stream.endTime)}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 pt-2">
-            <span className="text-[11px] text-zinc-400">Cancelable:</span>
-            <span className="text-xs text-zinc-700">{stream.cancelable ? "Yes" : "No"}</span>
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-zinc-400">Cancelable:</span>
+              <span className="text-xs text-zinc-700">{stream.cancelable ? "Yes" : "No"}</span>
+            </div>
+            <span className="font-mono text-xs text-zinc-500">{formatTimeRemaining(stream.endTime)}</span>
           </div>
         </div>
       </div>
 
       <div className="flex gap-3">
         {isRecipient && claimable > 0 && (
-          <button className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-violet-500 active:scale-[0.97]">
-            Withdraw {formatTokenAmount(claimable, 6)}
+          <button
+            onClick={() => withdraw(stream.publicKey, {
+              mint: stream.mint,
+              escrowTokenAccount: stream.escrowTokenAccount,
+              escrowBump: stream.escrowBump,
+            })}
+            disabled={withdrawStatus === "signing" || withdrawStatus === "confirming"}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-violet-500 disabled:opacity-60 active:scale-[0.97]"
+          >
+            {withdrawStatus === "signing" || withdrawStatus === "confirming" ? (
+              <><SpinnerGap size={14} className="animate-spin" /> {withdrawStatus === "signing" ? "Approve..." : "Confirming..."}</>
+            ) : withdrawStatus === "success" ? (
+              "Withdrawn"
+            ) : (
+              <>Withdraw {formatTokenAmount(claimable, 6)}</>
+            )}
           </button>
         )}
         {isCreator && stream.cancelable && status === "active" && (

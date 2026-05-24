@@ -4,13 +4,14 @@ import { useState } from "react";
 import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
+import { getMint } from "@solana/spl-token";
 import { getProgram, createStreamTx } from "@/lib/anchor/program";
+import { toRawTokenAmount } from "@/lib/utils/format";
 
 export type CreateStreamParams = {
   recipient: string;
   mint: string;
-  amount: number;
-  decimals: number;
+  amount: string;
   startTime: number;
   cliffTime: number;
   endTime: number;
@@ -40,7 +41,8 @@ export function useCreateStream() {
       const streamId = new BN(Date.now()); // unique stream ID
       const recipient = new PublicKey(params.recipient);
       const mint = new PublicKey(params.mint);
-      const totalAmount = new BN(params.amount * Math.pow(10, params.decimals));
+      const mintInfo = await getMint(connection, mint);
+      const totalAmount = new BN(toRawTokenAmount(params.amount, mintInfo.decimals).toString());
 
       const { tx, signers } = await createStreamTx(program, wallet.publicKey, {
         streamId,
