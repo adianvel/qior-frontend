@@ -62,6 +62,12 @@ export type TdpSolana = {
   accounts: [
     {
       name: "Stream";
+      discriminator: number[];
+    }
+  ];
+  types: [
+    {
+      name: "Stream";
       type: {
         kind: "struct";
         fields: [
@@ -150,6 +156,12 @@ export const IDL: TdpSolana = {
     },
   ],
   accounts: [
+    {
+      name: "Stream",
+      discriminator: [166, 224, 59, 4, 202, 10, 186, 83],
+    },
+  ],
+  types: [
     {
       name: "Stream",
       type: {
