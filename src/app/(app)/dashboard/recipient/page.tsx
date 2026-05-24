@@ -8,6 +8,7 @@ import { getStreamStatus, getClaimableAmount, formatTokenAmount, shortenAddress,
 export default function RecipientDashboardPage() {
   const { data: streams, isLoading, error, refetch } = useStreams("recipient");
   const { withdraw, status: withdrawStatus, error: withdrawError } = useWithdraw();
+  const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
   if (isLoading) {
     return (
@@ -23,7 +24,7 @@ export default function RecipientDashboardPage() {
         <WarningCircle size={48} weight="duotone" className="text-red-400" />
         <h2 className="text-lg font-semibold text-zinc-900">Couldn&apos;t load incoming streams</h2>
         <p className="text-sm text-zinc-500 max-w-sm">
-          The devnet RPC request failed. Check your RPC environment variable and try again.
+          {errorMessage}
         </p>
         <button
           onClick={() => refetch()}
