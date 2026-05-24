@@ -26,7 +26,10 @@ export function useCancelStream() {
       const sig = await sendTransaction(tx, connection);
       await connection.confirmTransaction(sig, "confirmed");
       setStatus("success");
-      queryClient.invalidateQueries({ queryKey: ["streams"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["streams"], refetchType: "active" }),
+        queryClient.invalidateQueries({ queryKey: ["stream"], refetchType: "active" }),
+      ]);
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Cancel failed");
