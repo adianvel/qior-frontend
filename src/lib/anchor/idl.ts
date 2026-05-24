@@ -1,67 +1,12 @@
 export type TdpSolana = {
   version: "0.1.0";
   name: "tdp_solana";
-  instructions: [
-    {
-      name: "createStream";
-      discriminator: number[];
-      accounts: [
-        { name: "creator"; isMut: true; isSigner: true },
-        { name: "stream"; isMut: true; isSigner: false },
-        { name: "mint"; isMut: false; isSigner: false },
-        { name: "creatorTokenAccount"; isMut: true; isSigner: false },
-        { name: "escrowAuthority"; isMut: false; isSigner: false },
-        { name: "escrowTokenAccount"; isMut: true; isSigner: false },
-        { name: "tokenProgram"; isMut: false; isSigner: false },
-        { name: "associatedTokenProgram"; isMut: false; isSigner: false },
-        { name: "systemProgram"; isMut: false; isSigner: false }
-      ];
-      args: [
-        { name: "streamId"; type: "u64" },
-        { name: "recipient"; type: "pubkey" },
-        { name: "totalAmount"; type: "u64" },
-        { name: "startTime"; type: "i64" },
-        { name: "cliffTime"; type: "i64" },
-        { name: "endTime"; type: "i64" },
-        { name: "cancelable"; type: "bool" },
-        { name: "milestoneBased"; type: "bool" }
-      ];
-    },
-    {
-      name: "withdraw";
-      discriminator: number[];
-      accounts: [
-        { name: "recipient"; isMut: true; isSigner: true },
-        { name: "stream"; isMut: true; isSigner: false },
-        { name: "mint"; isMut: false; isSigner: false },
-        { name: "escrowAuthority"; isMut: false; isSigner: false },
-        { name: "escrowTokenAccount"; isMut: true; isSigner: false },
-        { name: "recipientTokenAccount"; isMut: true; isSigner: false },
-        { name: "tokenProgram"; isMut: false; isSigner: false },
-        { name: "associatedTokenProgram"; isMut: false; isSigner: false },
-        { name: "systemProgram"; isMut: false; isSigner: false }
-      ];
-      args: [];
-    },
-    {
-      name: "cancelStream";
-      discriminator: number[];
-      accounts: [
-        { name: "creator"; isMut: true; isSigner: true },
-        { name: "recipientAuthority"; isMut: false; isSigner: false },
-        { name: "stream"; isMut: true; isSigner: false },
-        { name: "mint"; isMut: false; isSigner: false },
-        { name: "escrowAuthority"; isMut: false; isSigner: false },
-        { name: "escrowTokenAccount"; isMut: true; isSigner: false },
-        { name: "creatorTokenAccount"; isMut: true; isSigner: false },
-        { name: "recipientTokenAccount"; isMut: true; isSigner: false },
-        { name: "tokenProgram"; isMut: false; isSigner: false },
-        { name: "associatedTokenProgram"; isMut: false; isSigner: false },
-        { name: "systemProgram"; isMut: false; isSigner: false }
-      ];
-      args: [];
-    }
-  ];
+  instructions: Array<{
+    name: string;
+    discriminator: number[];
+    accounts: Array<{ name: string; writable?: boolean; signer?: boolean }>;
+    args: Array<{ name: string; type: string }>;
+  }>;
   accounts: [
     {
       name: "Stream";
@@ -105,15 +50,15 @@ export const IDL: TdpSolana = {
       name: "createStream",
       discriminator: [71, 188, 111, 127, 108, 40, 229, 158],
       accounts: [
-        { name: "creator", isMut: true, isSigner: true },
-        { name: "stream", isMut: true, isSigner: false },
-        { name: "mint", isMut: false, isSigner: false },
-        { name: "creatorTokenAccount", isMut: true, isSigner: false },
-        { name: "escrowAuthority", isMut: false, isSigner: false },
-        { name: "escrowTokenAccount", isMut: true, isSigner: false },
-        { name: "tokenProgram", isMut: false, isSigner: false },
-        { name: "associatedTokenProgram", isMut: false, isSigner: false },
-        { name: "systemProgram", isMut: false, isSigner: false },
+        { name: "creator", writable: true, signer: true },
+        { name: "stream", writable: true },
+        { name: "mint" },
+        { name: "creatorTokenAccount", writable: true },
+        { name: "escrowAuthority" },
+        { name: "escrowTokenAccount", writable: true, signer: true },
+        { name: "tokenProgram" },
+        { name: "associatedTokenProgram" },
+        { name: "systemProgram" },
       ],
       args: [
         { name: "streamId", type: "u64" },
@@ -130,15 +75,15 @@ export const IDL: TdpSolana = {
       name: "withdraw",
       discriminator: [183, 18, 70, 156, 148, 109, 161, 34],
       accounts: [
-        { name: "recipient", isMut: true, isSigner: true },
-        { name: "stream", isMut: true, isSigner: false },
-        { name: "mint", isMut: false, isSigner: false },
-        { name: "escrowAuthority", isMut: false, isSigner: false },
-        { name: "escrowTokenAccount", isMut: true, isSigner: false },
-        { name: "recipientTokenAccount", isMut: true, isSigner: false },
-        { name: "tokenProgram", isMut: false, isSigner: false },
-        { name: "associatedTokenProgram", isMut: false, isSigner: false },
-        { name: "systemProgram", isMut: false, isSigner: false },
+        { name: "recipient", writable: true, signer: true },
+        { name: "stream", writable: true },
+        { name: "mint" },
+        { name: "escrowAuthority" },
+        { name: "escrowTokenAccount", writable: true },
+        { name: "recipientTokenAccount", writable: true },
+        { name: "tokenProgram" },
+        { name: "associatedTokenProgram" },
+        { name: "systemProgram" },
       ],
       args: [],
     },
@@ -146,17 +91,17 @@ export const IDL: TdpSolana = {
       name: "cancelStream",
       discriminator: [218, 221, 38, 25, 177, 207, 188, 91],
       accounts: [
-        { name: "creator", isMut: true, isSigner: true },
-        { name: "recipientAuthority", isMut: false, isSigner: false },
-        { name: "stream", isMut: true, isSigner: false },
-        { name: "mint", isMut: false, isSigner: false },
-        { name: "escrowAuthority", isMut: false, isSigner: false },
-        { name: "escrowTokenAccount", isMut: true, isSigner: false },
-        { name: "creatorTokenAccount", isMut: true, isSigner: false },
-        { name: "recipientTokenAccount", isMut: true, isSigner: false },
-        { name: "tokenProgram", isMut: false, isSigner: false },
-        { name: "associatedTokenProgram", isMut: false, isSigner: false },
-        { name: "systemProgram", isMut: false, isSigner: false },
+        { name: "creator", writable: true, signer: true },
+        { name: "recipientAuthority" },
+        { name: "stream", writable: true },
+        { name: "mint" },
+        { name: "escrowAuthority" },
+        { name: "escrowTokenAccount", writable: true },
+        { name: "creatorTokenAccount", writable: true },
+        { name: "recipientTokenAccount", writable: true },
+        { name: "tokenProgram" },
+        { name: "associatedTokenProgram" },
+        { name: "systemProgram" },
       ],
       args: [],
     },
