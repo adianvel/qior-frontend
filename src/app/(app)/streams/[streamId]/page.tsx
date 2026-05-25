@@ -7,9 +7,10 @@ import { PublicKey } from "@solana/web3.js";
 import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Copy, ArrowSquareOut, SpinnerGap, WarningCircle } from "@phosphor-icons/react";
-import { getProgram } from "@/lib/anchor/program";
+import { decodeStreamAccount } from "@/lib/anchor/program";
 import type { StreamAccount } from "@/lib/anchor/types";
 import { useCancelStream } from "@/hooks/useCancelStream";
+import { useMintDecimals } from "@/hooks/useMintDecimals";
 import { useWithdraw } from "@/hooks/useWithdraw";
 import {
   explorerAccountUrl,
@@ -39,32 +40,12 @@ export default function StreamDetailPage() {
       const account = await connection.getAccountInfo(streamPublicKey);
       if (!account) throw new Error("Stream account not found");
 
-      const program = getProgram(connection, wallet);
-      const decoded = program.coder.accounts.decode("stream", account.data);
-
-      return {
-        publicKey: streamPublicKey,
-        creator: decoded.creator,
-        recipient: decoded.recipient,
-        mint: decoded.mint,
-        escrowTokenAccount: decoded.escrowTokenAccount,
-        streamId: decoded.streamId?.toNumber?.() ?? 0,
-        totalAmount: decoded.totalAmount?.toNumber?.() ?? 0,
-        withdrawnAmount: decoded.withdrawnAmount?.toNumber?.() ?? 0,
-        startTime: decoded.startTime?.toNumber?.() ?? 0,
-        cliffTime: decoded.cliffTime?.toNumber?.() ?? 0,
-        endTime: decoded.endTime?.toNumber?.() ?? 0,
-        cancelable: decoded.cancelable,
-        canceled: decoded.canceled,
-        milestoneBased: false,
-        milestoneReached: false,
-        bump: decoded.bump,
-        escrowBump: decoded.escrowBump,
-      } as StreamAccount;
+      return decodeStreamAccount(streamPublicKey, account.data);
     },
     enabled: !!wallet?.publicKey && !!params.streamId,
     retry: 1,
   });
+  const { data: mintDecimals = {} } = useMintDecimals([stream?.mint]);
 
   if (isLoading) {
     return (
@@ -90,6 +71,7 @@ export default function StreamDetailPage() {
   }
 
   const status = getStreamStatus(stream);
+  const decimals = mintDecimals[stream.mint.toBase58()] ?? 6;
   const vested = getVestedAmount(stream.totalAmount, stream.startTime, stream.cliffTime, stream.endTime);
   const claimable = getClaimableAmount(stream.totalAmount, stream.withdrawnAmount, stream.startTime, stream.cliffTime, stream.endTime);
   const pct = stream.totalAmount > 0 ? Math.round((stream.withdrawnAmount / stream.totalAmount) * 100) : 0;
@@ -148,19 +130,19 @@ export default function StreamDetailPage() {
         <div className="mt-4 grid grid-cols-4 gap-4 border-t border-zinc-100 pt-4">
           <div>
             <p className="text-[11px] text-zinc-400">Total</p>
-            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(stream.totalAmount, 6)}</p>
+            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(stream.totalAmount, decimals)}</p>
           </div>
           <div>
             <p className="text-[11px] text-zinc-400">Vested</p>
-            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(vested, 6)}</p>
+            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(vested, decimals)}</p>
           </div>
           <div>
             <p className="text-[11px] text-zinc-400">Withdrawn</p>
-            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(stream.withdrawnAmount, 6)}</p>
+            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(stream.withdrawnAmount, decimals)}</p>
           </div>
           <div>
             <p className="text-[11px] text-zinc-400">Claimable</p>
-            <p className="font-mono text-sm font-semibold text-emerald-600">{formatTokenAmount(claimable, 6)}</p>
+            <p className="font-mono text-sm font-semibold text-emerald-600">{formatTokenAmount(claimable, decimals)}</p>
           </div>
         </div>
       </div>
@@ -231,15 +213,19 @@ export default function StreamDetailPage() {
               escrowTokenAccount: stream.escrowTokenAccount,
               escrowBump: stream.escrowBump,
             })}
-            disabled={withdrawStatus === "signing" || withdrawStatus === "confirming"}
+            disabled={withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming"}
             className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-violet-500 disabled:opacity-60 active:scale-[0.97]"
           >
-            {withdrawStatus === "signing" || withdrawStatus === "confirming" ? (
-              <><SpinnerGap size={14} className="animate-spin" /> {withdrawStatus === "signing" ? "Approve..." : "Confirming..."}</>
+            {withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming" ? (
+              <><SpinnerGap size={14} className="animate-spin" /> {
+                withdrawStatus === "preparing" ? "Preparing..." :
+                withdrawStatus === "awaiting_signature" ? "Approve..." :
+                "Confirming..."
+              }</>
             ) : withdrawStatus === "success" ? (
               "Withdrawn"
             ) : (
-              <>Withdraw {formatTokenAmount(claimable, 6)}</>
+              <>Withdraw {formatTokenAmount(claimable, decimals)}</>
             )}
           </button>
         )}
@@ -272,11 +258,15 @@ export default function StreamDetailPage() {
               </button>
               <button
                 onClick={handleCancel}
-                disabled={cancelStatus === "signing" || cancelStatus === "confirming"}
+                disabled={cancelStatus === "preparing" || cancelStatus === "awaiting_signature" || cancelStatus === "confirming"}
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-60"
               >
-                {cancelStatus === "signing" || cancelStatus === "confirming" ? (
-                  <><SpinnerGap size={14} className="animate-spin" /> {cancelStatus === "signing" ? "Approve..." : "Cancelling..."}</>
+                {cancelStatus === "preparing" || cancelStatus === "awaiting_signature" || cancelStatus === "confirming" ? (
+                  <><SpinnerGap size={14} className="animate-spin" /> {
+                    cancelStatus === "preparing" ? "Preparing..." :
+                    cancelStatus === "awaiting_signature" ? "Approve..." :
+                    "Cancelling..."
+                  }</>
                 ) : (
                   "Confirm Cancel"
                 )}

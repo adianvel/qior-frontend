@@ -5,8 +5,10 @@ import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapte
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { getMint } from "@solana/spl-token";
+import { useQueryClient } from "@tanstack/react-query";
 import { getProgram, createStreamTx } from "@/lib/anchor/program";
 import { toRawTokenAmount } from "@/lib/utils/format";
+import { getTransactionErrorMessage, type TxStatus } from "@/lib/utils/transactions";
 
 export type CreateStreamParams = {
   recipient: string;
@@ -17,8 +19,6 @@ export type CreateStreamParams = {
   endTime: number;
   cancelable: boolean;
 };
-
-export type TxStatus = "idle" | "preparing" | "signing" | "confirming" | "success" | "error";
 
 function withTimeout<T>(promise: Promise<T>, message: string, ms = 15_000): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -40,6 +40,7 @@ export function useCreateStream() {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const { sendTransaction } = useWallet();
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<TxStatus>("idle");
   const [signature, setSignature] = useState("");
   const [error, setError] = useState("");
@@ -75,19 +76,15 @@ export function useCreateStream() {
         cancelable: params.cancelable,
       });
 
-      setStatus("signing");
+      setStatus("awaiting_signature");
       const sig = await sendTransaction(tx, connection, { signers });
       setStatus("confirming");
       await connection.confirmTransaction(sig, "confirmed");
       setSignature(sig);
       setStatus("success");
+      await queryClient.invalidateQueries({ queryKey: ["streams"] });
     } catch (err: unknown) {
-      const msg = err instanceof Error
-        ? err.message.includes("Invalid account data")
-          ? "Invalid token mint address. Use an existing SPL token mint on devnet."
-          : err.message
-        : "Transaction failed";
-      setError(msg);
+      setError(getTransactionErrorMessage(err, "Transaction failed"));
       setStatus("error");
     }
   };

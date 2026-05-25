@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { PlusCircle, Stack, SpinnerGap, WarningCircle } from "@phosphor-icons/react";
 import { useStreams } from "@/hooks/useStreams";
+import { useMintDecimals } from "@/hooks/useMintDecimals";
 import { getStreamStatus, formatTokenAmount, shortenAddress, formatTimeRemaining } from "@/lib/utils/format";
 
 export default function CreatorDashboardPage() {
   const { data: streams, isLoading, error, refetch } = useStreams("creator");
+  const { data: mintDecimals = {} } = useMintDecimals(streams?.map((stream) => stream.mint) ?? []);
   const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
   if (isLoading) {
@@ -104,6 +106,7 @@ export default function CreatorDashboardPage() {
         </div>
         {streams.map((stream) => {
           const status = getStreamStatus(stream);
+          const decimals = mintDecimals[stream.mint.toBase58()] ?? 6;
           const pct = stream.totalAmount > 0 ? Math.round((stream.withdrawnAmount / stream.totalAmount) * 100) : 0;
           return (
             <Link
@@ -112,8 +115,8 @@ export default function CreatorDashboardPage() {
               className="grid grid-cols-[1.4fr_0.9fr_0.9fr_0.8fr_0.9fr_0.6fr] gap-3 items-center px-5 py-3.5 border-b border-zinc-50 hover:bg-zinc-50/50 transition-colors text-sm"
             >
               <span className="text-zinc-900 font-mono text-xs">{shortenAddress(stream.recipient, 6)}</span>
-              <span className="text-zinc-600 font-mono text-xs">{formatTokenAmount(stream.totalAmount, 6)}</span>
-              <span className="text-zinc-600 font-mono text-xs">{formatTokenAmount(stream.withdrawnAmount, 6)}</span>
+              <span className="text-zinc-600 font-mono text-xs">{formatTokenAmount(stream.totalAmount, decimals)}</span>
+              <span className="text-zinc-600 font-mono text-xs">{formatTokenAmount(stream.withdrawnAmount, decimals)}</span>
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
                   <div className="h-full bg-violet-500 rounded-full" style={{ width: `${pct}%` }} />

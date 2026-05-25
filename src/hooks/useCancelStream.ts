@@ -5,34 +5,40 @@ import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapte
 import { PublicKey } from "@solana/web3.js";
 import { getProgram, cancelStreamTx } from "@/lib/anchor/program";
 import { useQueryClient } from "@tanstack/react-query";
+import { getTransactionErrorMessage, type TxStatus } from "@/lib/utils/transactions";
 
 export function useCancelStream() {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const { sendTransaction } = useWallet();
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<"idle" | "signing" | "confirming" | "success" | "error">("idle");
+  const [status, setStatus] = useState<TxStatus>("idle");
   const [error, setError] = useState("");
 
   const cancel = async (streamPDA: PublicKey, streamData: { recipient: PublicKey; mint: PublicKey; escrowTokenAccount: PublicKey }) => {
-    if (!wallet?.publicKey || !sendTransaction) return;
-    setStatus("signing");
+    if (!wallet?.publicKey || !sendTransaction) {
+      setError("Wallet not connected");
+      setStatus("error");
+      return;
+    }
+    setStatus("preparing");
     setError("");
 
     try {
       const program = getProgram(connection, wallet);
       const tx = await cancelStreamTx(program, wallet.publicKey, streamPDA, streamData);
-      setStatus("confirming");
+      setStatus("awaiting_signature");
       const sig = await sendTransaction(tx, connection);
+      setStatus("confirming");
       await connection.confirmTransaction(sig, "confirmed");
       setStatus("success");
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["streams"], refetchType: "active" }),
-        queryClient.invalidateQueries({ queryKey: ["stream"], refetchType: "active" }),
+        queryClient.invalidateQueries({ queryKey: ["streams"] }),
+        queryClient.invalidateQueries({ queryKey: ["stream"] }),
       ]);
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Cancel failed");
+      setError(getTransactionErrorMessage(err, "Cancel failed"));
       setStatus("error");
       setTimeout(() => setStatus("idle"), 3000);
     }

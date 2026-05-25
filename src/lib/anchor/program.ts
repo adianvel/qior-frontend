@@ -4,6 +4,7 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddres
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { IDL } from "./idl";
 import { PROGRAM_ID_STRING } from "@/lib/env";
+import type { StreamAccount } from "./types";
 
 export const PROGRAM_ID = new PublicKey(PROGRAM_ID_STRING);
 
@@ -35,6 +36,82 @@ export function getEscrowAuthorityPDA(stream: PublicKey) {
     [Buffer.from("escrow_authority"), stream.toBuffer()],
     PROGRAM_ID
   );
+}
+
+function createReader(data: Uint8Array) {
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  let offset = 8; // Anchor account discriminator
+
+  return {
+    get offset() {
+      return offset;
+    },
+    readPubkey() {
+      const value = new PublicKey(data.slice(offset, offset + 32));
+      offset += 32;
+      return value;
+    },
+    readU64() {
+      const value = Number(view.getBigUint64(offset, true));
+      offset += 8;
+      return value;
+    },
+    readI64() {
+      const value = Number(view.getBigInt64(offset, true));
+      offset += 8;
+      return value;
+    },
+    readBool() {
+      const value = data[offset];
+      if (value !== 0 && value !== 1) {
+        throw new Error(`Invalid bool: ${value}`);
+      }
+      offset += 1;
+      return value === 1;
+    },
+    readU8() {
+      const value = data[offset];
+      offset += 1;
+      return value;
+    },
+  };
+}
+
+export function decodeStreamAccount(publicKey: PublicKey, data: Uint8Array): StreamAccount {
+  const reader = createReader(data);
+
+  const stream = {
+    publicKey,
+    creator: reader.readPubkey(),
+    recipient: reader.readPubkey(),
+    mint: reader.readPubkey(),
+    escrowTokenAccount: reader.readPubkey(),
+    streamId: reader.readU64(),
+    totalAmount: reader.readU64(),
+    withdrawnAmount: reader.readU64(),
+    startTime: reader.readI64(),
+    cliffTime: reader.readI64(),
+    endTime: reader.readI64(),
+    cancelable: reader.readBool(),
+    canceled: reader.readBool(),
+    milestoneBased: false,
+    milestoneReached: false,
+    bump: 0,
+    escrowBump: 0,
+    createdAt: 0,
+  };
+
+  const remaining = data.length - reader.offset;
+  if (remaining >= 12) {
+    stream.milestoneBased = reader.readBool();
+    stream.milestoneReached = reader.readBool();
+  }
+
+  stream.bump = reader.readU8();
+  stream.escrowBump = reader.readU8();
+  stream.createdAt = reader.readI64();
+
+  return stream;
 }
 
 export async function createStreamTx(
