@@ -18,4 +18,5 @@ export interface StreamAccount {
   milestoneReached: boolean;
   bump: number;
   escrowBump: number;
+  createdAt: number;
 }

@@ -2,12 +2,15 @@
 
 import { Wallet, SpinnerGap, CheckCircle, WarningCircle } from "@phosphor-icons/react";
 import { useStreams } from "@/hooks/useStreams";
+import { useMintDecimals } from "@/hooks/useMintDecimals";
 import { useWithdraw } from "@/hooks/useWithdraw";
 import { getStreamStatus, getClaimableAmount, formatTokenAmount, shortenAddress, formatTimeRemaining } from "@/lib/utils/format";
 
 export default function RecipientDashboardPage() {
   const { data: streams, isLoading, error, refetch } = useStreams("recipient");
+  const { data: mintDecimals = {} } = useMintDecimals(streams?.map((stream) => stream.mint) ?? []);
   const { withdraw, status: withdrawStatus, error: withdrawError } = useWithdraw();
+  const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
   if (isLoading) {
     return (
@@ -23,7 +26,7 @@ export default function RecipientDashboardPage() {
         <WarningCircle size={48} weight="duotone" className="text-red-400" />
         <h2 className="text-lg font-semibold text-zinc-900">Couldn&apos;t load incoming streams</h2>
         <p className="text-sm text-zinc-500 max-w-sm">
-          The devnet RPC request failed. Check your RPC environment variable and try again.
+          {errorMessage}
         </p>
         <button
           onClick={() => refetch()}
@@ -60,6 +63,7 @@ export default function RecipientDashboardPage() {
       <div className="flex flex-col gap-4">
         {streams.map((stream) => {
           const status = getStreamStatus(stream);
+          const decimals = mintDecimals[stream.mint.toBase58()] ?? 6;
           const claimable = getClaimableAmount(
             stream.totalAmount, stream.withdrawnAmount,
             stream.startTime, stream.cliffTime, stream.endTime
@@ -87,7 +91,7 @@ export default function RecipientDashboardPage() {
 
               <div className="mt-4">
                 <div className="flex justify-between text-xs text-zinc-500 mb-1.5">
-                  <span>Withdrawn: {formatTokenAmount(stream.withdrawnAmount, 6)}</span>
+                  <span>Withdrawn: {formatTokenAmount(stream.withdrawnAmount, decimals)}</span>
                   <span>{pct}%</span>
                 </div>
                 <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
@@ -98,15 +102,15 @@ export default function RecipientDashboardPage() {
               <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-zinc-100">
                 <div>
                   <p className="text-[11px] text-zinc-400">Total</p>
-                  <p className="text-sm font-mono font-semibold text-zinc-900">{formatTokenAmount(stream.totalAmount, 6)}</p>
+                  <p className="text-sm font-mono font-semibold text-zinc-900">{formatTokenAmount(stream.totalAmount, decimals)}</p>
                 </div>
                 <div>
                   <p className="text-[11px] text-zinc-400">Claimed</p>
-                  <p className="text-sm font-mono font-semibold text-zinc-900">{formatTokenAmount(stream.withdrawnAmount, 6)}</p>
+                  <p className="text-sm font-mono font-semibold text-zinc-900">{formatTokenAmount(stream.withdrawnAmount, decimals)}</p>
                 </div>
                 <div>
                   <p className="text-[11px] text-zinc-400">Claimable</p>
-                  <p className="text-sm font-mono font-semibold text-emerald-600">{formatTokenAmount(claimable, 6)}</p>
+                  <p className="text-sm font-mono font-semibold text-emerald-600">{formatTokenAmount(claimable, decimals)}</p>
                 </div>
               </div>
 
@@ -121,10 +125,14 @@ export default function RecipientDashboardPage() {
               >
                 {withdrawStatus === "success" ? (
                   <><CheckCircle size={16} /> Withdrawn</>
-                ) : withdrawStatus === "signing" || withdrawStatus === "confirming" ? (
-                  <><SpinnerGap size={16} className="animate-spin" /> {withdrawStatus === "signing" ? "Approve..." : "Confirming..."}</>
+                ) : withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming" ? (
+                  <><SpinnerGap size={16} className="animate-spin" /> {
+                    withdrawStatus === "preparing" ? "Preparing..." :
+                    withdrawStatus === "awaiting_signature" ? "Approve..." :
+                    "Confirming..."
+                  }</>
                 ) : (
-                  <>Withdraw {formatTokenAmount(claimable, 6)}</>
+                  <>Withdraw {formatTokenAmount(claimable, decimals)}</>
                 )}
               </button>
             </div>

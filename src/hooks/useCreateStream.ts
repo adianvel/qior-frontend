@@ -5,8 +5,10 @@ import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapte
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { getMint } from "@solana/spl-token";
+import { useQueryClient } from "@tanstack/react-query";
 import { getProgram, createStreamTx } from "@/lib/anchor/program";
 import { toRawTokenAmount } from "@/lib/utils/format";
+import { getTransactionErrorMessage, type TxStatus } from "@/lib/utils/transactions";
 
 export type CreateStreamParams = {
   recipient: string;
@@ -18,12 +20,27 @@ export type CreateStreamParams = {
   cancelable: boolean;
 };
 
-export type TxStatus = "idle" | "signing" | "confirming" | "success" | "error";
+function withTimeout<T>(promise: Promise<T>, message: string, ms = 15_000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error(message)), ms);
+
+    promise
+      .then((value) => {
+        clearTimeout(timeout);
+        resolve(value);
+      })
+      .catch((error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+  });
+}
 
 export function useCreateStream() {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const { sendTransaction } = useWallet();
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<TxStatus>("idle");
   const [signature, setSignature] = useState("");
   const [error, setError] = useState("");
@@ -33,7 +50,7 @@ export function useCreateStream() {
       setError("Wallet not connected");
       return;
     }
-    setStatus("signing");
+    setStatus("preparing");
     setError("");
 
     try {
@@ -41,7 +58,11 @@ export function useCreateStream() {
       const streamId = new BN(Date.now()); // unique stream ID
       const recipient = new PublicKey(params.recipient);
       const mint = new PublicKey(params.mint);
-      const mintInfo = await getMint(connection, mint);
+
+      const mintInfo = await withTimeout(
+        getMint(connection, mint),
+        "Token mint lookup timed out. Check the mint address and RPC connection."
+      );
       const totalAmount = new BN(toRawTokenAmount(params.amount, mintInfo.decimals).toString());
 
       const { tx, signers } = await createStreamTx(program, wallet.publicKey, {
@@ -55,14 +76,15 @@ export function useCreateStream() {
         cancelable: params.cancelable,
       });
 
-      setStatus("confirming");
+      setStatus("awaiting_signature");
       const sig = await sendTransaction(tx, connection, { signers });
+      setStatus("confirming");
       await connection.confirmTransaction(sig, "confirmed");
       setSignature(sig);
       setStatus("success");
+      await queryClient.invalidateQueries({ queryKey: ["streams"] });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Transaction failed";
-      setError(msg);
+      setError(getTransactionErrorMessage(err, "Transaction failed"));
       setStatus("error");
     }
   };
