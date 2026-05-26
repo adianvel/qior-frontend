@@ -1,85 +1,92 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowUpRight } from "@phosphor-icons/react";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+
+const logoSvgs = [
+  `<svg xmlns="http://www.w3.org/2000/svg" width="123" height="40" viewBox="0 0 123 40" fill="none" id="Logo"> <g id="logotype"> <path d="M115.737 11.8284L107.152 0H123L115.737 11.8284Z" fill="#1A1A1A"/> <path d="M96.7638 0.00153177H102.446L113.673 15.4694L98.6121 39.9985L82.9109 39.9992L78.2611 33.5911L74.3266 40L53.926 39.9992L49.2762 33.5911L45.3425 39.9985L11.6236 39.9992L0 23.9822L14.7243 0.00153177H27.5979L13.1866 23.4722L17.2121 29.0195L39.2109 29.0187L47.216 15.9795L43.5891 10.9813H38.8735L31.2042 23.4706L32.9546 25.8824H19.3985L18.0184 23.9807L32.7411 0.00153177H49.1767L53.4287 5.8598L57.025 0.00306355L84.6146 0.000765887L77.8725 10.9813L63.1574 10.9821L60.4026 15.4686L60.4034 15.4694L55.4889 23.4722L59.5144 29.0195H68.195L70.6033 25.0981H60.9848L60.0859 23.6345L65.9291 14.1184H90.2168L84.4738 23.4714L88.4993 29.0187H92.4805L100.486 15.9795L96.8586 10.9813H82.5727L89.3148 0H96.7638V0.00153177Z" fill="#1A1A1A"/> </g> </svg>`,
+  `<svg xmlns="http://www.w3.org/2000/svg" width="62" height="40" viewBox="0 0 62 40" fill="none" id="Logo"> <g id="logogram"> <path d="M7.02047 20.514L38.3369 12.1305H10.0945L7.02047 20.514ZM6.59954 21.662L5.2839 25.25H5.28572L2.09656 34.1495L38.5941 13.0969L6.59954 21.662ZM1.57495 35.605L0 40H13.0334L39.094 13.9633L1.57495 35.605ZM14.4489 40H25.1661L39.8062 14.666L14.4489 40ZM26.3219 40H34.0116L40.6711 15.1693L26.3219 40ZM35.0478 40H41.6376V15.4292L35.0478 40ZM42.6385 40H49.2288L42.6385 15.4273V40ZM50.1713 39.6503L52.3203 33.6534C52.6446 32.7483 52.7601 31.7948 52.673 30.8601L43.6055 15.1691L50.1713 39.6503ZM50.386 24.9025C51.4645 24.6247 52.4867 24.1867 53.421 23.6103L44.4732 14.6707L50.386 24.9025ZM54.262 23.0363C55.1738 22.3502 55.9801 21.5219 56.6455 20.5763L45.1804 13.9629L54.262 23.0363ZM57.1836 19.732C57.492 19.1957 57.7578 18.6284 57.9758 18.0338L58.5256 16.5346L45.6778 13.0952L57.1836 19.732ZM58.8713 15.5918L60.1404 12.1305H45.9415L58.8713 15.5918ZM60.5071 11.1305L61.6315 8.06389C61.78 7.65908 61.8821 7.25179 61.9412 6.84684L45.9397 11.1305H60.5071ZM62 5.79582C61.9487 4.25961 61.2986 2.82175 60.2459 1.76246L45.6788 10.1651L62 5.79582ZM59.4324 1.07701C58.4714 0.403271 57.2938 0 55.9925 0H54.4856L45.1777 9.29939L59.4324 1.07701ZM53.0701 0H49.4371L44.4744 8.58786L53.0701 0ZM48.2814 0H45.7756L43.6056 8.09119L48.2814 0ZM44.7394 0H42.6385V7.83342L44.7394 0ZM41.6376 0H39.5372L41.6376 7.83154V0ZM38.501 0H35.9953L40.6709 8.09095L38.501 0ZM34.8396 0H31.2046L39.8051 8.59257L34.8396 0ZM29.7891 0H22.9754L39.0967 9.29905L29.7891 0ZM10.4612 11.1305H38.3387L12.953 4.33465L10.4612 11.1305ZM13.3033 3.39316L38.5932 10.1633L20.9736 0H18.3885C16.1557 0 14.1524 1.3462 13.3033 3.39316Z" fill="#FF651D"/> </g> </svg>`,
+  `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none" id="Logo"> <g id="logomark"> <path d="M20 0C9.50659 0 1 8.50659 1 19V20.1719L4 23.1719V19C4 10.1634 11.1634 3 20 3C28.8366 3 36 10.1634 36 19V23.1719L39 20.1719V19C39 8.50659 30.4934 0 20 0ZM20 10C15.0294 10 11 14.0294 11 19V31.0498C11 31.5743 10.5743 32 10.0498 32C9.7981 31.9999 9.55691 31.8997 9.37891 31.7217L0 22.3428V26.585L7.25781 33.8428C7.99842 34.5834 9.00245 34.9999 10.0498 35C12.2312 35 14 33.2312 14 31.0498V19C14 15.6863 16.6863 13 20 13C23.3137 13 26 15.6863 26 19V31.0498C26 33.2312 27.7688 35 29.9502 35C30.9976 34.9999 32.0016 34.5834 32.7422 33.8428L34.7066 31.8785L37.7066 28.8785L40 26.585V22.3428L37.8789 24.4639L35.5854 26.7574L32.5854 29.7574L30.6211 31.7217C30.4431 31.8997 30.2019 31.9999 29.9502 32C29.4257 32 29 31.5743 29 31.0498V19C29 14.0294 24.9706 10 20 10ZM20 15C17.7909 15 16 16.7909 16 19V31.0498C16 34.3358 13.3358 37 10.0498 37C8.47201 36.9999 6.95846 36.3735 5.84277 35.2578L0 29.4141V33.6562L3.72168 37.3789C5.39997 39.0572 7.67636 39.9999 10.0498 40C14.9926 40 19 35.9926 19 31.0498V19C19 18.4477 19.4477 18 20 18C20.5523 18 21 18.4477 21 19V31.0498C21 35.9926 25.0074 40 29.9502 40C32.3236 39.9999 34.6 39.0572 36.2783 37.3789L40 33.6562V29.4141L34.1572 35.2578C33.0415 36.3735 31.528 36.9999 29.9502 37C26.6642 37 24 34.3358 24 31.0498V19C24 16.7909 22.2091 15 20 15ZM20 5C12.268 5 6 11.268 6 19V25.1719L9 28.1719V19C9 12.9249 13.9249 8 20 8C26.0751 8 31 12.9249 31 19V28.1719L34 25.1719V19C34 11.268 27.732 5 20 5Z" fill="#FF3902"/> </g> </svg>`,
+  `<svg id="logo" width="109" height="40" viewBox="0 0 109 40" xmlns="http://www.w3.org/2000/svg" fill="none"> <g id="logotype"> <path fill="#020D5A" d="M55 0.00195312C57.7036 0.0369344 60.2104 0.886829 62.2871 2.31641C64.4988 0.853246 67.1495 0 70 0H90V0.0244141C100.581 0.545442 109 9.28963 109 20C109 31.0457 100.046 40 89 40C77.9543 40 69 31.0457 69 20C69 17.1555 69.5946 14.4499 70.665 12H70C68.8954 12 68 12.8954 68 14H67.9971C67.9691 16.1559 67.4235 18.1862 66.4785 19.9736C68.0603 22.0675 69 24.6736 69 27.5C69 34.4036 63.4036 40 56.5 40H44V28H58.5C58.7761 28 59 27.7761 59 27.5C59 27.2239 58.7761 27 58.5 27H55V26.9971C54.9421 26.9978 54.8842 27 54.8262 27H54.5C47.0442 27 41 20.9558 41 13.5C41 12.993 41.0286 12.4925 41.083 12H17V0H55V0.00195312ZM89 2C79.0589 2 71 10.0589 71 20C71 29.9411 79.0589 38 89 38C98.9411 38 107 29.9411 107 20C107 10.0589 98.9411 2 89 2ZM54.5 11C53.1193 11 52 12.1193 52 13.5C52 14.8807 53.1193 16 54.5 16C55.7095 16 56.7186 15.1411 56.9502 14C56.983 13.8385 57 13.6712 57 13.5C57 13.2293 56.9559 12.9693 56.876 12.7256C56.8729 12.7161 56.8694 12.7067 56.8662 12.6973C56.7589 12.3831 56.5919 12.0966 56.377 11.8525C56.3716 11.8465 56.3657 11.841 56.3604 11.835C56.3076 11.7762 56.2523 11.7196 56.1943 11.666C55.7487 11.2543 55.1545 11 54.5 11Z M104 20C104 21.6569 102.657 23 101 23C99.3431 23 98 21.6569 98 20C98 18.3431 99.3431 17 101 17C102.657 17 104 18.3431 104 20Z M36 22.5C36 23.8807 34.8807 25 33.5 25C32.1193 25 31 23.8807 31 22.5C31 21.1193 32.1193 20 33.5 20C34.8807 20 36 21.1193 36 22.5Z M16 13H29.5C36.9558 13 43 19.0442 43 26.5C43 33.9558 36.9558 40 29.5 40H16C7.16344 40 0 32.8366 0 24V0H16V13ZM29.5 15C23.1487 15 18 20.1487 18 26.5C18 32.8513 23.1487 38 29.5 38C35.8513 38 41 32.8513 41 26.5C41 20.1487 35.8513 15 29.5 15Z" clip-rule="evenodd" fill-rule="evenodd"/> </g> </svg>`,
+  `<svg width="132" aria-label="Default logo" role="img" height="35" viewBox="0 0 132 35" fill="none" xmlns="http://www.w3.org/2000/svg"> <path fill-rule="evenodd" clip-rule="evenodd" d="M23.475 21.0629C26.2798 19.5694 28.2 16.53 28.2 13.0234C28.2 8.03994 24.3217 4 19.5375 4C16.1712 4 13.2533 6.00019 11.8195 8.92187H3V30.25H23.475V21.0629ZM24.2625 13.0234C24.2625 15.7417 22.1471 17.9453 19.5375 17.9453C16.928 17.9453 14.8125 15.7417 14.8125 13.0234C14.8125 10.3051 16.928 8.10156 19.5375 8.10156C22.1471 8.10156 24.2625 10.3051 24.2625 13.0234ZM10.875 13.0234H6.93749V26.1483H19.5375V22.0468C14.7533 22.0468 10.875 18.0069 10.875 13.0234Z" fill="#007DFC"/> <path d="M35.55 25.8664H45.0178V23.0413H38.9151V12.4H35.55V25.8664Z" fill="#4A5568"/> <path d="M50.6273 23.983C49.2775 23.983 48.5738 22.8152 48.5738 21.0637C48.5738 19.3121 49.2775 18.1256 50.6273 18.1256C51.9767 18.1256 52.6996 19.3121 52.6996 21.0637C52.6996 22.8152 51.9767 23.983 50.6273 23.983ZM50.646 26.1677C53.7829 26.1677 55.8365 23.9641 55.8365 21.0637C55.8365 18.1632 53.7829 15.9596 50.646 15.9596C47.5283 15.9596 45.437 18.1632 45.437 21.0637C45.437 23.9641 47.5283 26.1677 50.646 26.1677Z" fill="#4A5568"/> <path d="M61.2661 29.2C62.7109 29.2 63.9846 28.8798 64.8402 28.1264C65.6196 27.4297 66.133 26.3748 66.133 24.9247V16.2234H63.1673V17.2592H63.1289C62.559 16.4494 61.6841 15.9408 60.3913 15.9408C57.9768 15.9408 56.3038 17.9372 56.3038 20.7623C56.3038 23.7193 58.3382 25.339 60.5246 25.339C61.7033 25.339 62.4449 24.8682 63.0148 24.2278H63.091V25.1884C63.091 26.356 62.5398 27.0339 61.2278 27.0339C60.2015 27.0339 59.6881 26.6011 59.517 26.0926H56.5133C56.8172 28.1076 58.5856 29.2 61.2661 29.2ZM61.247 23.0601C60.0874 23.0601 59.3267 22.1184 59.3267 20.6682C59.3267 19.1991 60.0874 18.2574 61.247 18.2574C62.5398 18.2574 63.2243 19.3498 63.2243 20.6493C63.2243 22.0054 62.5968 23.0601 61.247 23.0601Z" fill="#4A5568"/> <path d="M72.2314 23.983C70.8815 23.983 70.1778 22.8152 70.1778 21.0637C70.1778 19.3121 70.8815 18.1256 72.2314 18.1256C73.5808 18.1256 74.3037 19.3121 74.3037 21.0637C74.3037 22.8152 73.5808 23.983 72.2314 23.983ZM72.2501 26.1677C75.387 26.1677 77.4406 23.9641 77.4406 21.0637C77.4406 18.1632 75.387 15.9596 72.2501 15.9596C69.1324 15.9596 67.0409 18.1632 67.0409 21.0637C67.0409 23.9641 69.1324 26.1677 72.2501 26.1677Z" fill="#4A5568"/> <path d="M78.3456 25.8664H81.4441V16.2234H78.3456V25.8664ZM78.3456 14.8861H81.4441V12.4H78.3456V14.8861Z" fill="#4A5568"/> <path d="M82.7887 29.0493H85.8873V24.8682H85.9256C86.5339 25.6781 87.4275 26.1677 88.6819 26.1677C91.2297 26.1677 92.9218 24.1713 92.9218 21.0448C92.9218 18.1444 91.3438 15.9408 88.7581 15.9408C87.4275 15.9408 86.4769 16.5247 85.8115 17.3911H85.7545V16.2234H82.7887V29.0493ZM87.8838 23.7946C86.5526 23.7946 85.7924 22.7211 85.7924 21.1578C85.7924 19.5946 86.4769 18.4081 87.8268 18.4081C89.1574 18.4081 89.7849 19.5005 89.7849 21.1578C89.7849 22.7964 89.0625 23.7946 87.8838 23.7946Z" fill="#4A5568"/> <path d="M97.967 26.1677C100.515 26.1677 102.397 25.0753 102.397 22.9659C102.397 20.4987 100.382 20.0655 98.6707 19.783C97.435 19.557 96.332 19.4628 96.332 18.7847C96.332 18.1821 96.9216 17.8996 97.6818 17.8996C98.5375 17.8996 99.1271 18.1632 99.2412 19.0296H102.093C101.94 17.1274 100.458 15.9408 97.701 15.9408C95.4006 15.9408 93.4994 16.9955 93.4994 19.0296C93.4994 21.2897 95.3057 21.7417 96.9978 22.0243C98.2906 22.2503 99.4689 22.3444 99.4689 23.2108C99.4689 23.8323 98.8797 24.1713 97.9483 24.1713C96.9216 24.1713 96.2754 23.7005 96.1613 22.7399H93.2334C93.3283 24.8682 95.1154 26.1677 97.967 26.1677Z" fill="#4A5568"/> <path d="M106.606 26.149C107.956 26.149 108.812 25.6215 109.515 24.6798H109.572V25.8664H112.538V16.2234H109.439V21.6099C109.439 22.7588 108.792 23.5498 107.728 23.5498C106.739 23.5498 106.264 22.966 106.264 21.9112V16.2234H103.184V22.5516C103.184 24.6987 104.363 26.149 106.606 26.149Z" fill="#4A5568"/> <path d="M113.886 25.8664H116.985V20.461C116.985 19.3121 117.555 18.5023 118.525 18.5023C119.456 18.5023 119.893 19.1049 119.893 20.1408V25.8664H122.992V20.461C122.992 19.3121 123.544 18.5023 124.532 18.5023C125.464 18.5023 125.901 19.1049 125.901 20.1408V25.8664H129V19.5946C129 17.4287 127.898 15.9408 125.692 15.9408C124.437 15.9408 123.392 16.4682 122.631 17.6359H122.593C122.099 16.6 121.129 15.9408 119.855 15.9408C118.448 15.9408 117.517 16.6 116.909 17.5982H116.852V16.2234H113.886V25.8664Z" fill="#4A5568"/> </svg>`,
+];
 
 export function Hero() {
   return (
-    <section className="relative min-h-[100dvh] overflow-hidden bg-[#07060b]">
-      {/* Background image layer */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-70"
-        style={{ backgroundImage: "url('/hero-bg.png')" }}
-      />
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0d0b14]/90 via-[#0a0a0f]/60 to-[#120b1e]/80" />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#07060b] via-transparent to-transparent" />
+    <section className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#d8c7ff_0%,#cbb8ff_46%,#f0e7ff_100%)]">
+      <div className="qior-hero-gradient absolute -inset-[12%] bg-[radial-gradient(circle_at_12%_45%,rgba(158,117,255,0.55),transparent_36%),radial-gradient(circle_at_78%_22%,rgba(124,58,237,0.5),transparent_34%),radial-gradient(circle_at_72%_70%,rgba(255,255,255,0.62),transparent_30%),radial-gradient(circle_at_48%_25%,rgba(250,245,255,0.6),transparent_28%)]" />
 
-      {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between px-6 md:px-10 py-6 max-w-[1400px] mx-auto">
-        <span className="text-xl font-bold tracking-tight text-white">◆ Qior</span>
-        <div className="hidden md:flex items-center gap-10 text-sm text-zinc-300">
-          <a href="#features" className="hover:text-white transition-colors">Product</a>
-          <a href="#developers" className="hover:text-white transition-colors">Docs</a>
-          <a href="#developers" className="hover:text-white transition-colors">Developers</a>
-          <a href="#use-cases" className="hover:text-white transition-colors">About</a>
+      <div className="qior-hero-blur absolute -inset-[28%] scale-125 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.42),transparent_22%),radial-gradient(circle_at_60%_42%,rgba(139,92,246,0.42),transparent_28%),radial-gradient(circle_at_90%_12%,rgba(109,40,217,0.46),transparent_24%)] blur-[70px]" />
+
+      <div className="absolute inset-0 opacity-[0.13] mix-blend-soft-light bg-[url('data:image/svg+xml,%3Csvg_viewBox=%220_0_256_256%22_xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter_id=%22noise%22%3E%3CfeTurbulence_type=%22fractalNoise%22_baseFrequency=%220.8%22_numOctaves=%224%22_stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect_width=%22256%22_height=%22256%22_filter=%22url(%23noise)%22_opacity=%220.45%22/%3E%3C/svg%3E')]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent via-[#f2eaff]/70 to-[#f8f8fa]" />
+
+      <nav className="relative z-10 mx-auto grid h-18 max-w-[1400px] grid-cols-2 items-center px-6 text-black md:grid-cols-[1fr_auto_1fr] md:px-10">
+        <Link href="/" className="text-[22px] font-bold tracking-tight">
+          Qior
+        </Link>
+
+        <div className="hidden items-center gap-10 text-sm text-black/60 md:flex">
+          <a href="#features" className="transition-colors hover:text-black">Product</a>
+          <a href="#how-it-works" className="transition-colors hover:text-black">How it works</a>
+          <a href="#developers" className="transition-colors hover:text-black">Developers</a>
+          <a href="#use-cases" className="transition-colors hover:text-black">Use cases</a>
         </div>
-        <a
-          href="/dashboard/creator"
-          className="hidden md:inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium text-white border border-zinc-700 rounded-lg hover:bg-white/5 active:scale-[0.97] transition-all"
-        >
-          Launch App <ArrowUpRight size={14} weight="bold" />
-        </a>
+
+        <div className="flex justify-end">
+          <Link
+            href="/dashboard/creator"
+            className="inline-flex items-center gap-1.5 rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-zinc-900 active:scale-[0.97]"
+          >
+            Launch App <ArrowUpRight size={14} strokeWidth={2.5} />
+          </Link>
+        </div>
       </nav>
 
-      {/* Content */}
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-10 pt-24 md:pt-32 pb-32">
-        {/* Headline */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.05] tracking-tighter max-w-3xl"
-        >
-          Distribute tokens
-          <br />
-          with{" "}
-          <span className="">
-            trust.
-          </span>
-        </motion.h1>
+      <div className="relative z-10 flex min-h-[calc(100vh-72px)] flex-col items-center justify-center gap-6 px-6 pb-12 pt-10 text-center">
+        <h1 className="text-[clamp(56px,7vw,88px)] font-medium leading-none tracking-normal text-black">
+          Qior
+        </h1>
 
-        {/* Subtitle */}
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.35 }}
-          className="mt-8 text-lg text-zinc-400 max-w-[50ch] leading-relaxed"
-        >
-          Lock tokens in escrow and release them through transparent vesting on{" "}
-          <span className="">Solana</span>.
-        </motion.p>
+        <p className="max-w-[760px] text-[22px] leading-normal text-black">
+          Token vesting and distribution platform.
+        </p>
 
-        {/* CTAs */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="flex items-center gap-4 mt-10"
-        >
-          <a
+        <div className="mt-4 flex flex-wrap justify-center gap-4">
+          <Link
             href="/dashboard/creator"
-            className="inline-flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-sm font-semibold rounded-lg active:scale-[0.97] active:-translate-y-[1px] transition-all"
+            className="rounded-full bg-black px-7 py-4 font-semibold text-white transition-all hover:bg-zinc-900 active:scale-[0.97]"
           >
-            Launch App <ArrowUpRight size={14} weight="bold" />
-          </a>
+            Launch App
+          </Link>
+
           <a
             href="#features"
-            className="inline-flex items-center px-7 py-3.5 border border-zinc-700 hover:border-zinc-500 text-white text-sm font-medium rounded-lg active:scale-[0.97] transition-all backdrop-blur-sm"
+            className="rounded-full bg-indigo-500/15 px-7 py-4 text-black backdrop-blur-xl transition-all hover:bg-indigo-500/20 active:scale-[0.97]"
           >
-            Explore Docs
+            Explore Qior
           </a>
-        </motion.div>
+        </div>
+
+        <div className="mt-36 w-full max-w-6xl">
+          <p className="text-lg text-black/45">Trusted by top teams</p>
+          <div className="qior-logo-mask relative mt-10 overflow-hidden">
+            <div className="qior-logo-loop flex w-max items-center">
+              {[0, 1].map((group) => (
+                <div key={group} className="flex shrink-0 items-center gap-20 px-10">
+                  {logoSvgs.map((logo, index) => (
+                    <div
+                      key={`${group}-${index}`}
+                      aria-hidden="true"
+                      className="logoipsum-logo flex h-12 shrink-0 items-center justify-center"
+                      dangerouslySetInnerHTML={{ __html: logo }}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowUpRight, XLogo, DiscordLogo } from "@phosphor-icons/react";
+import { ArrowUpRight, MessageCircle, Send } from "lucide-react";
 
 export function CtaFooter() {
   return (
@@ -9,11 +10,6 @@ export function CtaFooter() {
       {/* CTA Section */}
       <section className="relative min-h-[80dvh] bg-[#f8f8fa] px-6 md:px-10 py-24 md:py-32 overflow-hidden">
         {/* Background 3D ring image */}
-        <div
-          className="absolute top-0 right-0 w-[50%] h-full bg-contain bg-right bg-no-repeat opacity-60 hidden lg:block"
-          style={{ backgroundImage: "url('/cta-bg.png')" }}
-        />
-
         <div className="relative z-10 max-w-[1400px] mx-auto">
           {/* Headline */}
           <motion.h2
@@ -51,12 +47,12 @@ export function CtaFooter() {
             transition={{ duration: 0.4, delay: 0.3 }}
             className="flex items-center gap-4 mt-10"
           >
-            <a
+            <Link
               href="/dashboard/creator"
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white text-sm font-semibold rounded-lg active:scale-[0.97] active:-translate-y-[1px] transition-all"
             >
-              Launch App <ArrowUpRight size={14} weight="bold" />
-            </a>
+              Launch App <ArrowUpRight size={14} strokeWidth={2.5} />
+            </Link>
             <a
               href="https://github.com/mancer-team2/programs"
               target="_blank"
@@ -88,10 +84,10 @@ export function CtaFooter() {
             </div>
             <div className="flex items-center gap-3 text-zinc-500">
               <a href="#" className="hover:text-zinc-900 transition-colors">
-                <XLogo size={18} weight="bold" />
+                <MessageCircle size={18} strokeWidth={2.25} />
               </a>
               <a href="#" className="hover:text-zinc-900 transition-colors">
-                <DiscordLogo size={18} weight="bold" />
+                <Send size={18} strokeWidth={2.25} />
               </a>
             </div>
           </div>

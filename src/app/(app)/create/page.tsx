@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PublicKey } from "@solana/web3.js";
-import { ArrowRight, CheckCircle, SpinnerGap, WarningCircle } from "@phosphor-icons/react";
+import { ArrowRight, CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
 import { useCreateStream } from "@/hooks/useCreateStream";
 import { explorerUrl } from "@/lib/utils/format";
 
@@ -59,7 +59,7 @@ export default function CreateStreamPage() {
   if (status === "success") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <CheckCircle size={56} weight="duotone" className="text-emerald-500" />
+        <CircleCheck size={56} strokeWidth={1.75} className="text-emerald-500" />
         <h2 className="text-xl font-semibold text-zinc-900">Stream Created</h2>
         <p className="text-sm text-zinc-500">Your vesting stream is now active on-chain.</p>
         {signature && (
@@ -164,7 +164,7 @@ export default function CreateStreamPage() {
 
         {displayError && (
           <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-lg bg-red-50 border border-red-100">
-            <WarningCircle size={16} className="text-red-500 shrink-0" />
+            <CircleAlert size={16} className="text-red-500 shrink-0" />
             <span className="text-sm text-red-600">{displayError}</span>
           </div>
         )}
@@ -175,13 +175,13 @@ export default function CreateStreamPage() {
           className="flex items-center justify-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg active:scale-[0.97] active:-translate-y-[1px] transition-all mt-2"
         >
           {status === "preparing" || status === "awaiting_signature" || status === "confirming" ? (
-            <><SpinnerGap size={16} className="animate-spin" /> {
+            <><LoaderCircle size={16} className="animate-spin" /> {
               status === "preparing" ? "Preparing transaction..." :
               status === "awaiting_signature" ? "Approve in wallet..." :
               "Confirming..."
             }</>
           ) : (
-            <>Create Stream <ArrowRight size={14} weight="bold" /></>
+            <>Create Stream <ArrowRight size={14} strokeWidth={2.5} /></>
           )}
         </button>
       </form>

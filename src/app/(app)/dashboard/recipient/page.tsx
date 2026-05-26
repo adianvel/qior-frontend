@@ -1,6 +1,6 @@
 "use client";
 
-import { Wallet, SpinnerGap, CheckCircle, WarningCircle } from "@phosphor-icons/react";
+import { CircleAlert, CircleCheck, LoaderCircle, Wallet } from "lucide-react";
 import { useStreams } from "@/hooks/useStreams";
 import { useMintDecimals } from "@/hooks/useMintDecimals";
 import { useWithdraw } from "@/hooks/useWithdraw";
@@ -15,7 +15,7 @@ export default function RecipientDashboardPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <SpinnerGap size={32} className="animate-spin text-violet-500" />
+        <LoaderCircle size={32} className="animate-spin text-violet-500" />
       </div>
     );
   }
@@ -23,7 +23,7 @@ export default function RecipientDashboardPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center">
-        <WarningCircle size={48} weight="duotone" className="text-red-400" />
+        <CircleAlert size={48} strokeWidth={1.75} className="text-red-400" />
         <h2 className="text-lg font-semibold text-zinc-900">Couldn&apos;t load incoming streams</h2>
         <p className="text-sm text-zinc-500 max-w-sm">
           {errorMessage}
@@ -41,7 +41,7 @@ export default function RecipientDashboardPage() {
   if (!streams || streams.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <Wallet size={48} weight="duotone" className="text-zinc-300" />
+        <Wallet size={48} strokeWidth={1.5} className="text-zinc-300" />
         <h2 className="text-lg font-semibold text-zinc-900">No incoming streams</h2>
         <p className="text-sm text-zinc-500 text-center max-w-sm">
           No tokens are being vested to your wallet yet.
@@ -124,9 +124,9 @@ export default function RecipientDashboardPage() {
                 className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg active:scale-[0.97] transition-all"
               >
                 {withdrawStatus === "success" ? (
-                  <><CheckCircle size={16} /> Withdrawn</>
+                  <><CircleCheck size={16} /> Withdrawn</>
                 ) : withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming" ? (
-                  <><SpinnerGap size={16} className="animate-spin" /> {
+                  <><LoaderCircle size={16} className="animate-spin" /> {
                     withdrawStatus === "preparing" ? "Preparing..." :
                     withdrawStatus === "awaiting_signature" ? "Approve..." :
                     "Confirming..."

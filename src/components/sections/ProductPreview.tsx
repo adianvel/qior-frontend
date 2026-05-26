@@ -1,15 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { House, Pulse, Coins, ChartLine, Gear, Plus } from "@phosphor-icons/react";
+import { Activity, ChartLine, Coins, House, Plus, Settings } from "lucide-react";
 
 const navItems = [
   { icon: House, label: "Overview", active: false },
-  { icon: Pulse, label: "Streams", active: true },
+  { icon: Activity, label: "Streams", active: true },
   { icon: Coins, label: "Distributions", active: false },
   { icon: ChartLine, label: "Vesting", active: false },
   { icon: ChartLine, label: "Analytics", active: false },
-  { icon: Gear, label: "Settings", active: false },
+  { icon: Settings, label: "Settings", active: false },
 ];
 
 const stats = [
@@ -31,11 +31,6 @@ export function ProductPreview() {
   return (
     <section className="relative min-h-[100dvh] bg-[#f8f8fa] px-6 md:px-10 py-24 md:py-32 overflow-hidden">
       {/* Bottom decorative image */}
-      <div
-        className="absolute bottom-0 left-0 w-[40%] h-[30%] bg-contain bg-left-bottom bg-no-repeat opacity-60 hidden lg:block"
-        style={{ backgroundImage: "url('/product-bg.png')" }}
-      />
-
       <div className="relative z-10 max-w-[1400px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-12 lg:gap-16 items-start">
           {/* Left — text */}
@@ -89,7 +84,7 @@ export function ProductPreview() {
                         : "text-zinc-500"
                     }`}
                   >
-                    <item.icon size={16} weight={item.active ? "fill" : "regular"} />
+                    <item.icon size={16} strokeWidth={item.active ? 2.5 : 1.75} />
                     {item.label}
                   </div>
                 ))}
@@ -110,7 +105,7 @@ export function ProductPreview() {
                     <p className="text-xs text-zinc-400 mt-0.5">Create and manage token streams across your ecosystem.</p>
                   </div>
                   <button className="flex items-center gap-1.5 px-3.5 py-2 bg-violet-600 text-white text-xs font-medium rounded-lg">
-                    <Plus size={12} weight="bold" /> New Stream
+                    <Plus size={12} strokeWidth={2.5} /> New Stream
                   </button>
                 </div>
 
