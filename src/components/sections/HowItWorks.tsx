@@ -1,12 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LockSimple, Clock, CheckSquare } from "@phosphor-icons/react";
+import { Clock, Lock, SquareCheck } from "lucide-react";
 
 const steps = [
-  { icon: LockSimple, num: "1", title: "Lock", desc: "Creator locks tokens in escrow." },
+  { icon: Lock, num: "1", title: "Lock", desc: "Creator locks tokens in escrow." },
   { icon: Clock, num: "2", title: "Vest", desc: "Smart contract releases over time." },
-  { icon: CheckSquare, num: "3", title: "Claim", desc: "Recipients withdraw vested tokens." },
+  { icon: SquareCheck, num: "3", title: "Claim", desc: "Recipients withdraw vested tokens." },
 ];
 
 export function HowItWorks() {
@@ -56,7 +56,7 @@ export function HowItWorks() {
                   <div className="absolute inset-3 rounded-full border border-zinc-200/80 bg-white/40" />
                   {/* Inner circle */}
                   <div className="w-16 h-16 rounded-2xl bg-white border border-zinc-200 shadow-[0_4px_20px_-4px_rgba(124,58,237,0.12)] flex items-center justify-center text-violet-500">
-                    <step.icon size={28} weight="duotone" />
+                    <step.icon size={28} strokeWidth={1.75} />
                   </div>
                 </div>
 

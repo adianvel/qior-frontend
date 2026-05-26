@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { PublicKey } from "@solana/web3.js";
 import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Copy, ArrowSquareOut, SpinnerGap, WarningCircle } from "@phosphor-icons/react";
+import { ArrowLeft, CircleAlert, Copy, ExternalLink, LoaderCircle } from "lucide-react";
 import { decodeStreamAccount } from "@/lib/anchor/program";
 import type { StreamAccount } from "@/lib/anchor/types";
 import { useCancelStream } from "@/hooks/useCancelStream";
@@ -50,7 +50,7 @@ export default function StreamDetailPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <SpinnerGap size={32} className="animate-spin text-violet-500" />
+        <LoaderCircle size={32} className="animate-spin text-violet-500" />
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function StreamDetailPage() {
   if (error || !stream) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
-        <WarningCircle size={48} weight="duotone" className="text-red-400" />
+        <CircleAlert size={48} strokeWidth={1.75} className="text-red-400" />
         <h1 className="text-xl font-semibold text-zinc-900">Stream not found</h1>
         <p className="max-w-sm text-sm text-zinc-500">
           This stream account could not be loaded from devnet.
@@ -169,7 +169,7 @@ export default function StreamDetailPage() {
                   className="text-zinc-400 hover:text-zinc-600"
                   aria-label={`Open ${row.label} in Solana Explorer`}
                 >
-                  <ArrowSquareOut size={12} />
+                  <ExternalLink size={12} />
                 </a>
                 <button
                   onClick={() => copyToClipboard(row.value)}
@@ -217,7 +217,7 @@ export default function StreamDetailPage() {
             className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-violet-500 disabled:opacity-60 active:scale-[0.97]"
           >
             {withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming" ? (
-              <><SpinnerGap size={14} className="animate-spin" /> {
+              <><LoaderCircle size={14} className="animate-spin" /> {
                 withdrawStatus === "preparing" ? "Preparing..." :
                 withdrawStatus === "awaiting_signature" ? "Approve..." :
                 "Confirming..."
@@ -243,7 +243,7 @@ export default function StreamDetailPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center gap-3">
-              <WarningCircle size={24} className="text-red-500" />
+              <CircleAlert size={24} className="text-red-500" />
               <h3 className="text-lg font-semibold text-zinc-900">Cancel Stream?</h3>
             </div>
             <p className="mb-6 text-sm text-zinc-500">
@@ -262,7 +262,7 @@ export default function StreamDetailPage() {
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-60"
               >
                 {cancelStatus === "preparing" || cancelStatus === "awaiting_signature" || cancelStatus === "confirming" ? (
-                  <><SpinnerGap size={14} className="animate-spin" /> {
+                  <><LoaderCircle size={14} className="animate-spin" /> {
                     cancelStatus === "preparing" ? "Preparing..." :
                     cancelStatus === "awaiting_signature" ? "Approve..." :
                     "Cancelling..."

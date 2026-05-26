@@ -1,11 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChartLineUp, ShieldCheck, Eye, ArrowCounterClockwise } from "@phosphor-icons/react";
+import { Eye, RotateCcw, ShieldCheck, TrendingUp } from "lucide-react";
 
 const features = [
   {
-    icon: ChartLineUp,
+    icon: TrendingUp,
     title: "Cliff & Linear Vesting",
     desc: "Create cliff and linear vesting schedules with flexible parameters.",
   },
@@ -20,7 +20,7 @@ const features = [
     desc: "All vesting events and releases are verifiable on-chain.",
   },
   {
-    icon: ArrowCounterClockwise,
+    icon: RotateCcw,
     title: "Revocable Streams",
     desc: "Pause or revoke streams securely with multi-sig controls.",
   },
@@ -30,11 +30,6 @@ export function Features() {
   return (
     <section id="features" className="relative bg-[#0a0a12] px-6 md:px-10 py-24 md:py-32 overflow-hidden">
       {/* Background 3D image — top right */}
-      <div
-        className="absolute top-0 right-0 w-[45%] h-[60%] bg-contain bg-right-top bg-no-repeat opacity-80 hidden lg:block"
-        style={{ backgroundImage: "url('/features-bg.png')" }}
-      />
-
       <div className="relative z-10 max-w-[1400px] mx-auto">
         {/* Headline */}
         <motion.h2
@@ -65,7 +60,7 @@ export function Features() {
             >
               {/* Icon box */}
               <div className="w-14 h-14 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-violet-400">
-                <f.icon size={26} weight="duotone" />
+                <f.icon size={26} strokeWidth={1.75} />
               </div>
 
               {/* Text */}

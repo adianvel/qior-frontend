@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { PlusCircle, Stack, SpinnerGap, WarningCircle } from "@phosphor-icons/react";
+import { CircleAlert, CirclePlus, Layers, LoaderCircle } from "lucide-react";
 import { useStreams } from "@/hooks/useStreams";
 import { useMintDecimals } from "@/hooks/useMintDecimals";
 import { getStreamStatus, formatTokenAmount, shortenAddress, formatTimeRemaining } from "@/lib/utils/format";
@@ -14,7 +14,7 @@ export default function CreatorDashboardPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <SpinnerGap size={32} className="animate-spin text-violet-500" />
+        <LoaderCircle size={32} className="animate-spin text-violet-500" />
       </div>
     );
   }
@@ -22,7 +22,7 @@ export default function CreatorDashboardPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center">
-        <WarningCircle size={48} weight="duotone" className="text-red-400" />
+        <CircleAlert size={48} strokeWidth={1.75} className="text-red-400" />
         <h2 className="text-lg font-semibold text-zinc-900">Couldn&apos;t load streams</h2>
         <p className="text-sm text-zinc-500 max-w-sm">
           {errorMessage}
@@ -40,7 +40,7 @@ export default function CreatorDashboardPage() {
   if (!streams || streams.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <Stack size={48} weight="duotone" className="text-zinc-300" />
+        <Layers size={48} strokeWidth={1.5} className="text-zinc-300" />
         <h2 className="text-lg font-semibold text-zinc-900">No streams yet</h2>
         <p className="text-sm text-zinc-500 text-center max-w-sm">
           You haven&apos;t created any vesting streams yet.
@@ -49,7 +49,7 @@ export default function CreatorDashboardPage() {
           href="/create"
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg active:scale-[0.97] transition-all mt-2"
         >
-          <PlusCircle size={16} weight="bold" /> Create your first stream
+          <CirclePlus size={16} strokeWidth={2.5} /> Create your first stream
         </Link>
       </div>
     );
@@ -70,7 +70,7 @@ export default function CreatorDashboardPage() {
           href="/create"
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg active:scale-[0.97] transition-all"
         >
-          <PlusCircle size={14} weight="bold" /> New Stream
+          <CirclePlus size={14} strokeWidth={2.5} /> New Stream
         </Link>
       </div>
 

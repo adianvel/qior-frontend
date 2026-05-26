@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ShieldCheck, Cube, FileTs, BookOpen } from "@phosphor-icons/react";
+import { BookOpen, Box, FileCode2, ShieldCheck } from "lucide-react";
 
 const code = `import { Qior } from '@qior/sdk';
 
@@ -26,8 +26,8 @@ console.log('Escrow created:', escrow.id);`;
 
 const devFeatures = [
   { icon: ShieldCheck, title: "Audited Escrow", desc: "Smart contracts audited by leading security firms." },
-  { icon: FileTs, title: "TypeScript SDK", desc: "Build faster with a modern, type-safe developer experience." },
-  { icon: Cube, title: "On-Chain Transparency", desc: "Every transaction is verifiable and publicly auditable." },
+  { icon: FileCode2, title: "TypeScript SDK", desc: "Build faster with a modern, type-safe developer experience." },
+  { icon: Box, title: "On-Chain Transparency", desc: "Every transaction is verifiable and publicly auditable." },
   { icon: BookOpen, title: "Read the Docs", desc: "Comprehensive guides and API references." },
 ];
 
@@ -35,11 +35,6 @@ export function ForDevelopers() {
   return (
     <section id="developers" className="relative bg-[#07060b] px-6 md:px-10 py-24 md:py-32 overflow-hidden">
       {/* Bottom decorative bg */}
-      <div
-        className="absolute bottom-0 right-0 w-[40%] h-[50%] bg-contain bg-right-bottom bg-no-repeat opacity-50 hidden lg:block"
-        style={{ backgroundImage: "url('/dev-bg.png')" }}
-      />
-
       <div className="relative z-10 max-w-[1400px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-16 items-start">
           {/* Left */}
@@ -86,7 +81,7 @@ export function ForDevelopers() {
                   className="flex items-start gap-3"
                 >
                   <div className="shrink-0 w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-violet-400">
-                    <f.icon size={20} weight="duotone" />
+                    <f.icon size={20} strokeWidth={1.75} />
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-white">{f.title}</h3>

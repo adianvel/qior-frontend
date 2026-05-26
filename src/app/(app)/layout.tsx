@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { House, PlusCircle, Stack, Wallet, SignOut } from "@phosphor-icons/react";
+import { CirclePlus, House, Layers, LogOut, Wallet } from "lucide-react";
 
 const WalletMultiButton = dynamic(
   () => import("@solana/wallet-adapter-react-ui").then((mod) => mod.WalletMultiButton),
@@ -12,9 +12,9 @@ const WalletMultiButton = dynamic(
 );
 
 const navItems = [
-  { href: "/dashboard/creator", label: "My Streams", icon: Stack },
+  { href: "/dashboard/creator", label: "My Streams", icon: Layers },
   { href: "/dashboard/recipient", label: "Incoming", icon: Wallet },
-  { href: "/create", label: "Create Stream", icon: PlusCircle },
+  { href: "/create", label: "Create Stream", icon: CirclePlus },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -42,7 +42,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
                 }`}
               >
-                <item.icon size={18} weight={active ? "fill" : "regular"} />
+                <item.icon size={18} strokeWidth={active ? 2.5 : 1.75} />
                 {item.label}
               </Link>
             );
@@ -54,7 +54,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={() => { disconnect(); window.location.href = "/"; }}
             className="flex items-center justify-center gap-2 w-full px-3 py-2 text-xs text-zinc-500 border border-zinc-200 rounded-lg hover:text-red-500 hover:border-red-200 transition-colors"
           >
-            <SignOut size={14} weight="bold" />
+            <LogOut size={14} strokeWidth={2.25} />
             Log out
           </button>
         </div>
@@ -75,7 +75,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 p-6 md:p-8">
           {!connected ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[60vh] gap-4">
-              <House size={48} weight="duotone" className="text-zinc-300" />
+              <House size={48} strokeWidth={1.5} className="text-zinc-300" />
               <h2 className="text-xl font-semibold text-zinc-900">Connect your wallet</h2>
               <p className="text-sm text-zinc-500 text-center max-w-sm">
                 Connect a Solana wallet to create streams, view incoming tokens, and manage your distributions.
