@@ -98,10 +98,10 @@ function ProblemPanel({
   return (
     <motion.article
       key={item.num}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0, filter: "blur(8px)" }}
+      animate={{ opacity: 1, filter: "blur(0px)" }}
+      exit={{ opacity: 0, filter: "blur(8px)" }}
+      transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
       className="absolute inset-0 flex flex-col items-start justify-end pb-16 pt-12 md:items-end md:pb-24"
     >
       <p className="mb-6 font-mono text-sm tracking-[0.24em] text-zinc-400">{item.num}</p>
@@ -165,7 +165,7 @@ export function Problem() {
         </div>
       </div>
 
-      <div ref={stageRef} className="relative hidden h-[110dvh] lg:h-[360dvh] md:block">
+      <div ref={stageRef} className="relative hidden h-[320dvh] lg:h-[420dvh] md:block">
         <div className="sticky top-0 h-[100svh] overflow-hidden px-6 py-7 md:px-10 md:py-12">
           <div className="relative z-10 mx-auto grid min-h-[calc(100svh-56px)] max-w-[1400px] content-between gap-6 md:min-h-[calc(100vh-80px)] md:grid-cols-[0.82fr_1.18fr] md:content-stretch md:gap-20">
             <div className="pt-3 md:pt-8">
