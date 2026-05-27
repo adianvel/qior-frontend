@@ -13,14 +13,7 @@ const logoSvgs = [
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#d8c7ff_0%,#cbb8ff_46%,#f0e7ff_100%)]">
-      <div className="qior-hero-gradient absolute -inset-[12%] bg-[radial-gradient(circle_at_12%_45%,rgba(158,117,255,0.55),transparent_36%),radial-gradient(circle_at_78%_22%,rgba(124,58,237,0.5),transparent_34%),radial-gradient(circle_at_72%_70%,rgba(255,255,255,0.62),transparent_30%),radial-gradient(circle_at_48%_25%,rgba(250,245,255,0.6),transparent_28%)]" />
-
-      <div className="qior-hero-blur absolute -inset-[28%] scale-125 bg-[radial-gradient(circle_at_20%_30%,rgba(255,255,255,0.42),transparent_22%),radial-gradient(circle_at_60%_42%,rgba(139,92,246,0.42),transparent_28%),radial-gradient(circle_at_90%_12%,rgba(109,40,217,0.46),transparent_24%)] blur-[70px]" />
-
-      <div className="absolute inset-0 opacity-[0.13] mix-blend-soft-light bg-[url('data:image/svg+xml,%3Csvg_viewBox=%220_0_256_256%22_xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter_id=%22noise%22%3E%3CfeTurbulence_type=%22fractalNoise%22_baseFrequency=%220.8%22_numOctaves=%224%22_stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect_width=%22256%22_height=%22256%22_filter=%22url(%23noise)%22_opacity=%220.45%22/%3E%3C/svg%3E')]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent via-[#f2eaff]/70 to-[#f8f8fa]" />
-
+    <section className="relative min-h-screen overflow-hidden">
       <nav className="relative z-10 mx-auto grid h-18 max-w-[1400px] grid-cols-2 items-center px-6 text-black md:grid-cols-[1fr_auto_1fr] md:px-10">
         <Link href="/" className="text-[22px] font-bold tracking-tight">
           Qior
