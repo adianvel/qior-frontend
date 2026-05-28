@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
@@ -15,8 +16,15 @@ export function Hero() {
   return (
     <section className="relative min-h-screen overflow-hidden">
       <nav className="relative z-10 mx-auto grid h-18 max-w-[1400px] grid-cols-2 items-center px-6 text-black md:grid-cols-[1fr_auto_1fr] md:px-10">
-        <Link href="/" className="text-[22px] font-bold tracking-tight">
-          Qior
+        <Link href="/" className="inline-flex h-14 items-center">
+          <Image
+            src="/logo-qior.avif"
+            alt="Qior"
+            width={120}
+            height={40}
+            priority
+            className="h-16 w-auto"
+          />
         </Link>
 
         <div className="hidden items-center gap-10 text-sm text-black/60 md:flex">

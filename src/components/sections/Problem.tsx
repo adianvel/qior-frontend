@@ -52,7 +52,7 @@ function ProgressiveWords({
         const end = Math.min(sequenceEnd, start + wordStep * 0.72);
         return (
           <ProgressiveWord
-            key={`${word}-${index}`}
+          key={`${word}-${index}`}
             word={word}
             progress={progress}
             range={[start, Math.max(start + 0.001, end)]}
@@ -111,7 +111,7 @@ function ProblemPanel({
         itemIndex={index}
         wordOffset={0}
         totalWords={totalWords}
-        className="max-w-[12ch] text-[clamp(40px,6.2vw,82px)] font-medium leading-[1] tracking-normal"
+        className="max-w-[12ch] text-[clamp(40px,6.2vw,82px)] font-medium leading-[1] tracking-normal text-zinc-900"
       />
       <ProgressiveWords
         text={item.desc}
@@ -119,7 +119,7 @@ function ProblemPanel({
         itemIndex={index}
         wordOffset={titleWordCount}
         totalWords={totalWords}
-        className="mt-7 max-w-[36ch] text-lg leading-relaxed md:text-xl"
+        className="mt-7 max-w-[36ch] text-lg leading-relaxed text-zinc-600 md:text-xl"
       />
     </motion.article>
   );
@@ -165,7 +165,7 @@ export function Problem() {
         </div>
       </div>
 
-      <div ref={stageRef} className="relative hidden h-[320dvh] lg:h-[420dvh] md:block">
+      <div ref={stageRef} className="relative hidden h-[460dvh] lg:h-[620dvh] md:block">
         <div className="sticky top-0 h-[100svh] overflow-hidden px-6 py-7 md:px-10 md:py-12">
           <div className="relative z-10 mx-auto grid min-h-[calc(100svh-56px)] max-w-[1400px] content-between gap-6 md:min-h-[calc(100vh-80px)] md:grid-cols-[0.82fr_1.18fr] md:content-stretch md:gap-20">
             <div className="pt-3 md:pt-8">
