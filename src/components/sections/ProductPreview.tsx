@@ -1,7 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Activity, ChartLine, Coins, House, Plus, Settings } from "lucide-react";
+import {
+  Activity,
+  ChartLine,
+  Code2,
+  Coins,
+  Gem,
+  Handshake,
+  House,
+  Plus,
+  Settings,
+  Trophy,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 const navItems = [
   { icon: House, label: "Overview", active: false },
@@ -20,34 +33,79 @@ const stats = [
 ];
 
 const streams = [
-  { name: "Ecosystem Rewards", amount: "500,000 QIOR", distributed: "320,000 QIOR", pct: 64, status: "Active" },
-  { name: "Community Incentives", amount: "250,000 QIOR", distributed: "125,000 QIOR", pct: 50, status: "Active" },
-  { name: "Partner Program", amount: "200,000 QIOR", distributed: "80,000 QIOR", pct: 40, status: "Paused" },
-  { name: "Liquidity Mining", amount: "300,000 QIOR", distributed: "210,000 QIOR", pct: 70, status: "Active" },
-  { name: "Developer Grants", amount: "170,000 QIOR", distributed: "102,000 QIOR", pct: 60, status: "Active" },
+  {
+    name: "Ecosystem Rewards",
+    amount: "500,000 QIOR",
+    distributed: "320,000 QIOR",
+    pct: 64,
+    status: "Active",
+    icon: Trophy,
+  },
+  {
+    name: "Community Incentives",
+    amount: "250,000 QIOR",
+    distributed: "125,000 QIOR",
+    pct: 50,
+    status: "Active",
+    icon: Users,
+  },
+  {
+    name: "Partner Program",
+    amount: "200,000 QIOR",
+    distributed: "80,000 QIOR",
+    pct: 40,
+    status: "Paused",
+    icon: Handshake,
+  },
+  {
+    name: "Liquidity Mining",
+    amount: "300,000 QIOR",
+    distributed: "210,000 QIOR",
+    pct: 70,
+    status: "Active",
+    icon: Gem,
+  },
+  {
+    name: "Developer Grants",
+    amount: "170,000 QIOR",
+    distributed: "102,000 QIOR",
+    pct: 60,
+    status: "Active",
+    icon: Code2,
+  },
 ];
+
+function StreamIconBadge({
+  icon: Icon,
+}: {
+  icon: LucideIcon;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_-12px_rgba(24,24,37,0.55)] ring-1 ring-zinc-200/80"
+    >
+      <Icon size={14} strokeWidth={2} />
+    </span>
+  );
+}
 
 export function ProductPreview() {
   return (
-    <section className="relative min-h-[100dvh] bg-[#f8f8fa] px-6 md:px-10 py-24 md:py-32 overflow-hidden">
-      {/* Bottom decorative image */}
+    <section className="relative min-h-[100dvh] bg-white px-6 md:px-10 py-24 md:py-32 overflow-hidden">
       <div className="relative z-10 max-w-[1400px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-12 lg:gap-16 items-start">
-          {/* Left — text */}
           <div className="pt-4">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-5xl md:text-6xl font-bold text-zinc-900 leading-[1.08] tracking-tighter"
+              className="text-[clamp(44px,5vw,72px)] font-medium leading-[1.04] tracking-normal text-black"
             >
-              Simple interface.
+              One dashboard.
               <br />
-              Powerful{" "}
-              <span className="text">
-                control.
-              </span>
+              Total vesting control.
             </motion.h2>
 
             <motion.p
@@ -55,24 +113,20 @@ export function ProductPreview() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              className="mt-6 text-base text-zinc-500 max-w-[36ch] leading-relaxed"
+              className="mt-6 max-w-[38ch] text-lg leading-relaxed text-zinc-600 md:text-[16px]"
             >
-              Manage streams, distribute tokens, and monitor performance — all from one intuitive dashboard.
+              Create token streams, track unlocks, and manage every recipient from a clean on-chain workspace.
             </motion.p>
-
-          
           </div>
 
-          {/* Right — dashboard mockup */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="rounded-2xl border border-zinc-200 bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] overflow-hidden"
+            className="rounded-2xl border border-zinc-200 bg-white shadow-[0_26px_90px_-32px_rgba(24,24,37,0.42),0_12px_34px_-26px_rgba(124,58,237,0.35)] overflow-hidden"
           >
             <div className="flex">
-              {/* Sidebar */}
               <div className="hidden md:flex flex-col w-48 border-r border-zinc-100 py-5 px-4 gap-1">
                 <div className="text-base font-bold text-zinc-900 px-3 mb-4">Qior</div>
                 {navItems.map((item) => (
@@ -96,20 +150,19 @@ export function ProductPreview() {
                 </div>
               </div>
 
-              {/* Main content */}
               <div className="flex-1 p-5">
-                {/* Header */}
                 <div className="flex items-center justify-between mb-5">
                   <div>
                     <h3 className="text-lg font-semibold text-zinc-900">Streams</h3>
-                    <p className="text-xs text-zinc-400 mt-0.5">Create and manage token streams across your ecosystem.</p>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Create and manage token streams across your ecosystem.
+                    </p>
                   </div>
                   <button className="flex items-center gap-1.5 px-3.5 py-2 bg-violet-600 text-white text-xs font-medium rounded-lg">
                     <Plus size={12} strokeWidth={2.5} /> New Stream
                   </button>
                 </div>
 
-                {/* Stats row */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                   {stats.map((s) => (
                     <div key={s.label} className="border border-zinc-100 rounded-lg p-3">
@@ -120,7 +173,6 @@ export function ProductPreview() {
                   ))}
                 </div>
 
-                {/* Table */}
                 <div>
                   <p className="text-sm font-semibold text-zinc-900 mb-3">All Streams</p>
                   <div className="text-[10px] text-zinc-400 uppercase tracking-wide grid grid-cols-[1.5fr_1fr_1fr_0.8fr_0.6fr] gap-2 px-2 pb-2 border-b border-zinc-100">
@@ -136,9 +188,7 @@ export function ProductPreview() {
                       className="grid grid-cols-[1.5fr_1fr_1fr_0.8fr_0.6fr] gap-2 items-center px-2 py-2.5 border-b border-zinc-50 text-xs"
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center text-[9px] font-bold text-violet-600">
-                          {s.name[0]}
-                        </div>
+                        <StreamIconBadge icon={s.icon} />
                         <div>
                           <p className="text-zinc-900 font-medium text-[11px]">{s.name}</p>
                           <p className="text-[9px] text-zinc-400">QIOR</p>
@@ -152,11 +202,7 @@ export function ProductPreview() {
                         </div>
                         <span className="text-zinc-500 font-mono text-[10px]">{s.pct}%</span>
                       </div>
-                      <span
-                        className={`text-[10px] font-medium ${
-                          s.status === "Active" ? "text-emerald-500" : "text-amber-500"
-                        }`}
-                      >
+                      <span className="text-[10px] font-medium text-zinc-950">
                         {s.status}
                       </span>
                     </div>
@@ -164,9 +210,15 @@ export function ProductPreview() {
                   <div className="flex items-center justify-between pt-3 text-[10px] text-zinc-400">
                     <span>Showing 1 to 5 of 24 streams</span>
                     <div className="flex items-center gap-1">
-                      <span className="w-5 h-5 rounded bg-violet-600 text-white flex items-center justify-center text-[9px] font-bold">1</span>
-                      <span className="w-5 h-5 rounded text-zinc-500 flex items-center justify-center">2</span>
-                      <span className="w-5 h-5 rounded text-zinc-500 flex items-center justify-center">3</span>
+                      <span className="w-5 h-5 rounded bg-violet-600 text-white flex items-center justify-center text-[9px] font-bold">
+                        1
+                      </span>
+                      <span className="w-5 h-5 rounded text-zinc-500 flex items-center justify-center">
+                        2
+                      </span>
+                      <span className="w-5 h-5 rounded text-zinc-500 flex items-center justify-center">
+                        3
+                      </span>
                     </div>
                   </div>
                 </div>

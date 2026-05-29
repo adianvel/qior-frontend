@@ -1,68 +1,120 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Gift, Globe2, TrendingUp, Users } from "lucide-react";
+import {
+  BadgeDollarSign,
+  CalendarClock,
+  Coins,
+  Factory,
+  Gift,
+  Globe2,
+  LockKeyhole,
+  Milestone,
+  ShieldCheck,
+  TrendingUp,
+  Users,
+  Vote,
+  type LucideIcon,
+} from "lucide-react";
 
 const cases = [
-  { icon: Users, title: "Teams &\nFounders" },
-  { icon: TrendingUp, title: "Investors &\nAdvisors" },
-  { icon: Gift, title: "Grants &\nRewards" },
-  { icon: Globe2, title: "DAOs &\nCommunities" },
+  {
+    icon: Users,
+    mini: "ship",
+    title: "Teams & Founders",
+    desc: "Lock contributor, founder, and employee allocations with clear release schedules.",
+  },
+  {
+    icon: TrendingUp,
+    mini: "growth",
+    title: "Investors & Advisors",
+    desc: "Give backers predictable unlocks while keeping every vesting term verifiable.",
+  },
+  {
+    icon: Gift,
+    mini: "trust",
+    title: "Grants & Rewards",
+    desc: "Stream ecosystem incentives over time instead of releasing everything at once.",
+  },
+  {
+    icon: Globe2,
+    mini: "governance",
+    title: "DAOs & Communities",
+    desc: "Coordinate transparent distributions for contributors, voters, and community programs.",
+  },
 ];
+
+function MiniIcon({ icon: Icon }: { icon: LucideIcon }) {
+  return <Icon size={22} strokeWidth={2.2} aria-hidden="true" />;
+}
+
+function MiniMark({ type }: { type: string }) {
+  const icons =
+    type === "ship"
+      ? [Users, LockKeyhole, CalendarClock]
+      : type === "growth"
+        ? [BadgeDollarSign, TrendingUp, ShieldCheck]
+        : type === "trust"
+          ? [Gift, Coins, Milestone]
+          : [Vote, Globe2, Factory];
+
+  return (
+    <div className="flex items-center gap-3 text-black">
+      {icons.map((Icon, index) => (
+        <MiniIcon key={`${type}-${index}`} icon={Icon} />
+      ))}
+    </div>
+  );
+}
 
 export function UseCases() {
   return (
     <section
       id="use-cases"
-      className="relative min-h-[100dvh] bg-[#f8f8fa] px-6 md:px-10 py-24 md:py-32 overflow-hidden"
+      className="relative overflow-hidden bg-white px-6 py-24 md:px-10 md:py-32"
     >
-      {/* Right-side 3D portal image */}
-      <div className="relative z-10 max-w-[1400px] mx-auto">
-        {/* Headline */}
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-5xl md:text-6xl lg:text-7xl font-bold text-zinc-900 leading-[1.08] tracking-tighter max-w-2xl"
-        >
-          Built for teams
-          <br />
-          and{" "}
-          <span className="">
-            communities.
-          </span>
-        </motion.h2>
+      <div className="relative z-10 mx-auto max-w-[1400px]">
+        <div className="grid items-end gap-8 lg:grid-cols-[1fr_0.8fr]">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="max-w-[12ch] text-[clamp(44px,5vw,72px)] font-medium leading-[1.04] tracking-normal text-black"
+          >
+            Built for every allocation.
+          </motion.h2>
 
-        {/* Subtitle */}
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="mt-6 text-base text-zinc-500 max-w-[40ch] leading-relaxed"
-        >
-          Qior adapts to the way you build, fund, and grow together onchain.
-        </motion.p>
+        </div>
 
-        {/* Use case icons row */}
-        <div className="flex flex-wrap gap-6 mt-14 max-w-xl">
-          {cases.map((c, i) => (
-            <motion.div
-              key={c.title}
-              initial={{ opacity: 0, y: 16 }}
+        <div className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {cases.map((item, i) => (
+            <motion.article
+              key={item.title}
+              initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.25 + i * 0.08 }}
-              className="flex flex-col items-center gap-3 w-[calc(25%-18px)] min-w-[100px]"
+              transition={{ duration: 0.42, delay: 0.16 + i * 0.07 }}
+              className="group relative min-h-[360px] overflow-hidden rounded-[32px] bg-[#f4f4f6] p-6"
             >
-              <div className="w-16 h-16 rounded-2xl bg-white border border-zinc-200/80 shadow-[0_2px_8px_-2px_rgba(124,58,237,0.06)] flex items-center justify-center text-violet-500">
-                <c.icon size={28} strokeWidth={1.5} />
+              <div className="relative flex h-full flex-col">
+                <div
+                  className="flex h-16 items-center text-zinc-950"
+                  aria-hidden="true"
+                >
+                  <MiniMark type={item.mini} />
+                </div>
+
+                <div className="mt-auto">
+                  <h3 className="flex min-h-[92px] max-w-[10ch] items-end text-[clamp(30px,3vw,42px)] font-medium leading-none tracking-normal text-zinc-950">
+                    {item.title}
+                  </h3>
+                  <p className="mt-5 min-h-[84px] text-base leading-relaxed text-zinc-600">
+                    {item.desc}
+                  </p>
+                </div>
               </div>
-              <p className="text-sm font-medium text-zinc-700 text-center whitespace-pre-line leading-tight">
-                {c.title}
-              </p>
-            </motion.div>
+            </motion.article>
           ))}
         </div>
       </div>
