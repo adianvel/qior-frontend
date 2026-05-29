@@ -38,6 +38,17 @@ export function getTransactionErrorMessage(error: unknown, fallback: string): st
     return "This stream has already been canceled.";
   }
 
+  if (lower.includes("notmilestonestream")) {
+    return "This stream is not configured as a milestone-based stream.";
+  }
+
+  if (lower.includes("fullyvested")) {
+    return "This stream is already fully unlocked for withdrawal.";
+  }
+
+  if (lower.includes("streamnotsettled")) {
+    return "This stream is not fully settled and cannot be closed yet.";
+  }
+
   return message || fallback;
 }
-

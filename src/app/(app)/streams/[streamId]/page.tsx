@@ -7,6 +7,9 @@ import { PublicKey } from "@solana/web3.js";
 import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CircleAlert, Copy, ExternalLink, LoaderCircle } from "lucide-react";
+import { AmountBreakdownBar } from "@/components/dashboard/AmountBreakdownBar";
+import { StreamStatusBadge } from "@/components/dashboard/StreamStatusBadge";
+import { StreamTimeline } from "@/components/dashboard/StreamTimeline";
 import { decodeStreamAccount } from "@/lib/anchor/program";
 import type { StreamAccount } from "@/lib/anchor/types";
 import { useCancelStream } from "@/hooks/useCancelStream";
@@ -15,12 +18,9 @@ import { useWithdraw } from "@/hooks/useWithdraw";
 import {
   explorerAccountUrl,
   formatDate,
-  formatTimeRemaining,
   formatTokenAmount,
-  getClaimableAmount,
-  getStreamStatus,
-  getVestedAmount,
 } from "@/lib/utils/format";
+import { deriveStreamLifecycle, getModeLabel } from "@/lib/utils/streamLifecycle";
 
 export default function StreamDetailPage() {
   const params = useParams<{ streamId: string }>();
@@ -70,11 +70,9 @@ export default function StreamDetailPage() {
     );
   }
 
-  const status = getStreamStatus(stream);
   const decimals = mintDecimals[stream.mint.toBase58()] ?? 6;
-  const vested = getVestedAmount(stream.totalAmount, stream.startTime, stream.cliffTime, stream.endTime);
-  const claimable = getClaimableAmount(stream.totalAmount, stream.withdrawnAmount, stream.startTime, stream.cliffTime, stream.endTime);
-  const pct = stream.totalAmount > 0 ? Math.round((stream.withdrawnAmount / stream.totalAmount) * 100) : 0;
+  const lifecycle = deriveStreamLifecycle(stream);
+  const claimable = lifecycle.breakdown.claimable;
   const isCreator = publicKey?.equals(stream.creator);
   const isRecipient = publicKey?.equals(stream.recipient);
 
@@ -97,15 +95,7 @@ export default function StreamDetailPage() {
 
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Stream Detail</h1>
-        <span
-          className={`rounded-md px-2.5 py-1 text-xs font-medium ${
-            status === "active" ? "bg-emerald-50 text-emerald-600" :
-            status === "completed" ? "bg-violet-50 text-violet-600" :
-            "bg-zinc-100 text-zinc-500"
-          }`}
-        >
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </span>
+        <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
       </div>
 
       {cancelError && (
@@ -121,12 +111,10 @@ export default function StreamDetailPage() {
 
       <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-5">
         <div className="mb-2 flex justify-between text-sm">
-          <span className="text-zinc-500">Vesting Progress</span>
-          <span className="font-mono font-semibold text-zinc-900">{pct}%</span>
+          <span className="text-zinc-500">Lifecycle Progress</span>
+          <span className="font-mono font-semibold text-zinc-900">{lifecycle.breakdown.vestingProgressPct}% vested</span>
         </div>
-        <div className="h-3 w-full overflow-hidden rounded-full bg-zinc-100">
-          <div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${pct}%` }} />
-        </div>
+        <AmountBreakdownBar breakdown={lifecycle.breakdown} />
         <div className="mt-4 grid grid-cols-4 gap-4 border-t border-zinc-100 pt-4">
           <div>
             <p className="text-[11px] text-zinc-400">Total</p>
@@ -134,17 +122,21 @@ export default function StreamDetailPage() {
           </div>
           <div>
             <p className="text-[11px] text-zinc-400">Vested</p>
-            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(vested, decimals)}</p>
+            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-zinc-400">Withdrawn</p>
-            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(stream.withdrawnAmount, decimals)}</p>
+            <p className="text-[11px] text-zinc-400">Claimed</p>
+            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(lifecycle.breakdown.claimed, decimals)}</p>
           </div>
           <div>
             <p className="text-[11px] text-zinc-400">Claimable</p>
             <p className="font-mono text-sm font-semibold text-emerald-600">{formatTokenAmount(claimable, decimals)}</p>
           </div>
         </div>
+      </div>
+
+      <div className="mb-4">
+        <StreamTimeline stream={stream} mode={lifecycle.mode} />
       </div>
 
       <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-5">
@@ -197,10 +189,14 @@ export default function StreamDetailPage() {
           </div>
           <div className="flex items-center justify-between gap-3 pt-2">
             <div className="flex items-center gap-2">
+              <span className="text-[11px] text-zinc-400">Mode:</span>
+              <span className="text-xs text-zinc-700">{getModeLabel(lifecycle.mode)}</span>
+            </div>
+            <div className="flex items-center gap-2">
               <span className="text-[11px] text-zinc-400">Cancelable:</span>
               <span className="text-xs text-zinc-700">{stream.cancelable ? "Yes" : "No"}</span>
             </div>
-            <span className="font-mono text-xs text-zinc-500">{formatTimeRemaining(stream.endTime)}</span>
+            <span className="font-mono text-xs text-zinc-500">{lifecycle.nextEventLabel}</span>
           </div>
         </div>
       </div>
@@ -229,7 +225,7 @@ export default function StreamDetailPage() {
             )}
           </button>
         )}
-        {isCreator && stream.cancelable && status === "active" && (
+        {isCreator && stream.cancelable && lifecycle.status !== "cancelled" && !lifecycle.readyToClose && (
           <button
             onClick={() => setShowCancelModal(true)}
             className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 px-4 py-3 text-sm font-medium text-red-600 transition-all hover:bg-red-50 active:scale-[0.97]"

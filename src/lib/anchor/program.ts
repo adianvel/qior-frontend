@@ -216,3 +216,40 @@ export async function cancelStreamTx(
     })
     .transaction();
 }
+
+export async function setMilestoneTx(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  program: any,
+  creator: PublicKey,
+  streamPDA: PublicKey
+) {
+  return program.methods
+    .setMilestone()
+    .accounts({
+      creator,
+      stream: streamPDA,
+    })
+    .transaction();
+}
+
+export async function closeStreamTx(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  program: any,
+  creator: PublicKey,
+  streamPDA: PublicKey,
+  streamData: { escrowTokenAccount: PublicKey }
+) {
+  const [escrowAuthority] = getEscrowAuthorityPDA(streamPDA);
+
+  return program.methods
+    .closeStream()
+    .accounts({
+      creator,
+      stream: streamPDA,
+      escrowTokenAccount: streamData.escrowTokenAccount,
+      escrowAuthority,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    })
+    .transaction();
+}
