@@ -18,6 +18,7 @@ export type CreateStreamParams = {
   cliffTime: number;
   endTime: number;
   cancelable: boolean;
+  milestoneBased: boolean;
 };
 
 function withTimeout<T>(promise: Promise<T>, message: string, ms = 15_000): Promise<T> {
@@ -74,6 +75,7 @@ export function useCreateStream() {
         cliffTime: new BN(params.cliffTime),
         endTime: new BN(params.endTime),
         cancelable: params.cancelable,
+        milestoneBased: params.milestoneBased,
       });
 
       setStatus("awaiting_signature");
