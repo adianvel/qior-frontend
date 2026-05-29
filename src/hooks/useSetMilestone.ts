@@ -1,34 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { getProgram, withdrawTx } from "@/lib/anchor/program";
+import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { getProgram, setMilestoneTx } from "@/lib/anchor/program";
 import { getTransactionErrorMessage, type TxStatus } from "@/lib/utils/transactions";
 
-export function useWithdraw() {
+export function useSetMilestone() {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const { sendTransaction } = useWallet();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<TxStatus>("idle");
   const [error, setError] = useState("");
-  const [activeStreamId, setActiveStreamId] = useState("");
 
-  const withdraw = async (streamPDA: PublicKey, streamData: { mint: PublicKey; escrowTokenAccount: PublicKey; escrowBump: number }) => {
+  const setMilestone = async (streamPDA: PublicKey) => {
     if (!wallet?.publicKey || !sendTransaction) {
       setError("Wallet not connected");
       setStatus("error");
       return;
     }
-    setActiveStreamId(streamPDA.toBase58());
+
     setStatus("preparing");
     setError("");
 
     try {
       const program = getProgram(connection, wallet);
-      const tx = await withdrawTx(program, wallet.publicKey, streamPDA, streamData);
+      const tx = await setMilestoneTx(program, wallet.publicKey, streamPDA);
       setStatus("awaiting_signature");
       const sig = await sendTransaction(tx, connection);
       setStatus("confirming");
@@ -40,16 +39,11 @@ export function useWithdraw() {
       ]);
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err: unknown) {
-      setError(getTransactionErrorMessage(err, "Withdraw failed"));
+      setError(getTransactionErrorMessage(err, "Milestone update failed"));
       setStatus("error");
       setTimeout(() => setStatus("idle"), 3000);
     }
   };
 
-  const isProcessingStream = (streamPDA: PublicKey) => {
-    return activeStreamId === streamPDA.toBase58()
-      && (status === "preparing" || status === "awaiting_signature" || status === "confirming");
-  };
-
-  return { withdraw, status, error, activeStreamId, isProcessingStream };
+  return { setMilestone, status, error };
 }

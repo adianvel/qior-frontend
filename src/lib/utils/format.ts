@@ -1,5 +1,10 @@
 import { PublicKey } from "@solana/web3.js";
 import { SOLANA_CLUSTER } from "@/lib/env";
+import {
+  getStreamClaimableAmount,
+  getStreamLifecycleStatus,
+  getStreamVestedAmount,
+} from "@/lib/utils/streamLifecycle";
 
 export function shortenAddress(address: string | PublicKey, chars = 4): string {
   const str = address.toString();
@@ -52,10 +57,16 @@ export function getVestedAmount(
   endTime: number,
   now?: number
 ): number {
-  const currentTime = now || Math.floor(Date.now() / 1000);
-  if (currentTime < cliffTime) return 0;
-  if (currentTime >= endTime) return totalAmount;
-  return Math.floor(totalAmount * (currentTime - startTime) / (endTime - startTime));
+  return getStreamVestedAmount({
+    totalAmount,
+    withdrawnAmount: 0,
+    startTime,
+    cliffTime,
+    endTime,
+    canceled: false,
+    milestoneBased: false,
+    milestoneReached: false,
+  }, now);
 }
 
 export function getClaimableAmount(
@@ -65,8 +76,16 @@ export function getClaimableAmount(
   cliffTime: number,
   endTime: number
 ): number {
-  const vested = getVestedAmount(totalAmount, startTime, cliffTime, endTime);
-  return Math.max(0, vested - withdrawnAmount);
+  return getStreamClaimableAmount({
+    totalAmount,
+    withdrawnAmount,
+    startTime,
+    cliffTime,
+    endTime,
+    canceled: false,
+    milestoneBased: false,
+    milestoneReached: false,
+  });
 }
 
 export function getStreamStatus(stream: {
@@ -74,9 +93,24 @@ export function getStreamStatus(stream: {
   totalAmount: number;
   withdrawnAmount: number;
   endTime: number;
+  startTime?: number;
+  cliffTime?: number;
+  milestoneBased?: boolean;
+  milestoneReached?: boolean;
 }): "active" | "completed" | "cancelled" {
-  if (stream.canceled) return "cancelled";
-  if (Date.now() / 1000 >= stream.endTime && stream.withdrawnAmount >= stream.totalAmount) return "completed";
+  const lifecycle = getStreamLifecycleStatus({
+    totalAmount: stream.totalAmount,
+    withdrawnAmount: stream.withdrawnAmount,
+    startTime: stream.startTime ?? 0,
+    cliffTime: stream.cliffTime ?? stream.startTime ?? 0,
+    endTime: stream.endTime,
+    canceled: stream.canceled,
+    milestoneBased: stream.milestoneBased ?? false,
+    milestoneReached: stream.milestoneReached ?? false,
+  });
+
+  if (lifecycle === "cancelled") return "cancelled";
+  if (lifecycle === "completed") return "completed";
   return "active";
 }
 

@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { CirclePlus, House, Layers, LogOut, Wallet } from "lucide-react";
+import { CirclePlus, House, Layers, LayoutDashboard, LogOut, Wallet } from "lucide-react";
 
 const WalletMultiButton = dynamic(
   () => import("@solana/wallet-adapter-react-ui").then((mod) => mod.WalletMultiButton),
@@ -12,6 +12,7 @@ const WalletMultiButton = dynamic(
 );
 
 const navItems = [
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/creator", label: "My Streams", icon: Layers },
   { href: "/dashboard/recipient", label: "Incoming", icon: Wallet },
   { href: "/create", label: "Create Stream", icon: CirclePlus },

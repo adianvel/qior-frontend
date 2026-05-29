@@ -9,6 +9,7 @@ import { explorerUrl } from "@/lib/utils/format";
 export default function CreateStreamPage() {
   const { create, status, signature, error: txError, reset } = useCreateStream();
 
+  const [mode, setMode] = useState<"time-based" | "milestone-based">("time-based");
   const [recipient, setRecipient] = useState("");
   const [mint, setMint] = useState("");
   const [amount, setAmount] = useState("");
@@ -22,6 +23,7 @@ export default function CreateStreamPage() {
     try { new PublicKey(recipient); } catch { return "Invalid recipient address"; }
     try { new PublicKey(mint); } catch { return "Invalid token mint address"; }
     if (!amount || parseFloat(amount) <= 0) return "Amount must be greater than zero";
+    if (mode === "milestone-based") return null;
     if (!startDate) return "Start date is required";
     if (!endDate) return "End date is required";
     const start = Math.floor(new Date(startDate).getTime() / 1000);
@@ -39,9 +41,12 @@ export default function CreateStreamPage() {
     const err = validate();
     if (err) { setValidationError(err); return; }
 
-    const start = Math.floor(new Date(startDate).getTime() / 1000);
-    const cliff = cliffDate ? Math.floor(new Date(cliffDate).getTime() / 1000) : start;
-    const end = Math.floor(new Date(endDate).getTime() / 1000);
+    const now = Math.floor(Date.now() / 1000);
+    const start = mode === "time-based" ? Math.floor(new Date(startDate).getTime() / 1000) : now;
+    const cliff = mode === "time-based"
+      ? (cliffDate ? Math.floor(new Date(cliffDate).getTime() / 1000) : start)
+      : now;
+    const end = mode === "time-based" ? Math.floor(new Date(endDate).getTime() / 1000) : now + 1;
 
     await create({
       recipient,
@@ -51,6 +56,7 @@ export default function CreateStreamPage() {
       cliffTime: cliff,
       endTime: end,
       cancelable,
+      milestoneBased: mode === "milestone-based",
     });
   };
 
@@ -61,7 +67,9 @@ export default function CreateStreamPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <CircleCheck size={56} strokeWidth={1.75} className="text-emerald-500" />
         <h2 className="text-xl font-semibold text-zinc-900">Stream Created</h2>
-        <p className="text-sm text-zinc-500">Your vesting stream is now active on-chain.</p>
+        <p className="text-sm text-zinc-500">
+          Your {mode === "milestone-based" ? "milestone-based" : "time-based"} vesting stream is now active on-chain.
+        </p>
         {signature && (
           <a
             href={explorerUrl(signature)}
@@ -85,6 +93,36 @@ export default function CreateStreamPage() {
       <p className="text-sm text-zinc-500 mt-1">Lock tokens in escrow with a vesting schedule.</p>
 
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+          <p className="text-sm font-medium text-zinc-800">Stream Mode</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setMode("time-based")}
+              className={`rounded-xl border px-4 py-3 text-left transition-colors ${
+                mode === "time-based"
+                  ? "border-violet-200 bg-violet-50"
+                  : "border-zinc-200 bg-white hover:border-zinc-300"
+              }`}
+            >
+              <p className="text-sm font-semibold text-zinc-900">Time-based</p>
+              <p className="mt-1 text-xs text-zinc-500">Unlocks by start, cliff, and end schedule.</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("milestone-based")}
+              className={`rounded-xl border px-4 py-3 text-left transition-colors ${
+                mode === "milestone-based"
+                  ? "border-violet-200 bg-violet-50"
+                  : "border-zinc-200 bg-white hover:border-zinc-300"
+              }`}
+            >
+              <p className="text-sm font-semibold text-zinc-900">Milestone-based</p>
+              <p className="mt-1 text-xs text-zinc-500">Unlocks only after the creator marks a milestone complete.</p>
+            </button>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-zinc-700">Recipient Address</label>
           <input
@@ -120,36 +158,45 @@ export default function CreateStreamPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-zinc-700">Start Date</label>
-            <input
-              type="datetime-local"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-3.5 py-2.5 rounded-lg border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
-            />
+        {mode === "time-based" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-zinc-700">Start Date</label>
+              <input
+                type="datetime-local"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="px-3.5 py-2.5 rounded-lg border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-zinc-700">Cliff Date</label>
+              <input
+                type="datetime-local"
+                value={cliffDate}
+                onChange={(e) => setCliffDate(e.target.value)}
+                className="px-3.5 py-2.5 rounded-lg border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+              />
+              <span className="text-[11px] text-zinc-400">Optional, defaults to start</span>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-zinc-700">End Date</label>
+              <input
+                type="datetime-local"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="px-3.5 py-2.5 rounded-lg border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+              />
+            </div>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-zinc-700">Cliff Date</label>
-            <input
-              type="datetime-local"
-              value={cliffDate}
-              onChange={(e) => setCliffDate(e.target.value)}
-              className="px-3.5 py-2.5 rounded-lg border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
-            />
-            <span className="text-[11px] text-zinc-400">Optional, defaults to start</span>
+        ) : (
+          <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-4">
+            <p className="text-sm font-medium text-amber-900">Milestone unlock flow</p>
+            <p className="mt-1 text-sm text-amber-800">
+              No schedule dates are needed. Tokens stay locked until you, as creator, mark the milestone as completed from the stream detail page.
+            </p>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-zinc-700">End Date</label>
-            <input
-              type="datetime-local"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-3.5 py-2.5 rounded-lg border border-zinc-200 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
-            />
-          </div>
-        </div>
+        )}
 
         <div className="flex items-center gap-3">
           <button
@@ -160,6 +207,19 @@ export default function CreateStreamPage() {
             <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${cancelable ? "left-5" : "left-1"}`} />
           </button>
           <span className="text-sm text-zinc-700">Cancelable stream</span>
+        </div>
+
+        <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+          <p className="text-sm font-medium text-zinc-800">Unlock Preview</p>
+          {mode === "time-based" ? (
+            <p className="mt-2 text-sm text-zinc-500">
+              Tokens unlock over time from the start date, remain blocked until the cliff if one is set, then continue vesting linearly until the end date.
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-zinc-500">
+              Tokens remain fully locked until the creator confirms milestone completion. After that, the recipient can withdraw the unlocked balance.
+            </p>
+          )}
         </div>
 
         {displayError && (
@@ -181,7 +241,7 @@ export default function CreateStreamPage() {
               "Confirming..."
             }</>
           ) : (
-            <>Create Stream <ArrowRight size={14} strokeWidth={2.5} /></>
+            <>Create {mode === "milestone-based" ? "Milestone" : "Time-based"} Stream <ArrowRight size={14} strokeWidth={2.5} /></>
           )}
         </button>
       </form>

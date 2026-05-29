@@ -1,34 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { getProgram, withdrawTx } from "@/lib/anchor/program";
+import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { closeStreamTx, getProgram } from "@/lib/anchor/program";
 import { getTransactionErrorMessage, type TxStatus } from "@/lib/utils/transactions";
 
-export function useWithdraw() {
+export function useCloseStream() {
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
   const { sendTransaction } = useWallet();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<TxStatus>("idle");
   const [error, setError] = useState("");
-  const [activeStreamId, setActiveStreamId] = useState("");
 
-  const withdraw = async (streamPDA: PublicKey, streamData: { mint: PublicKey; escrowTokenAccount: PublicKey; escrowBump: number }) => {
+  const closeStream = async (
+    streamPDA: PublicKey,
+    streamData: { escrowTokenAccount: PublicKey }
+  ) => {
     if (!wallet?.publicKey || !sendTransaction) {
       setError("Wallet not connected");
       setStatus("error");
       return;
     }
-    setActiveStreamId(streamPDA.toBase58());
+
     setStatus("preparing");
     setError("");
 
     try {
       const program = getProgram(connection, wallet);
-      const tx = await withdrawTx(program, wallet.publicKey, streamPDA, streamData);
+      const tx = await closeStreamTx(program, wallet.publicKey, streamPDA, streamData);
       setStatus("awaiting_signature");
       const sig = await sendTransaction(tx, connection);
       setStatus("confirming");
@@ -40,16 +42,11 @@ export function useWithdraw() {
       ]);
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err: unknown) {
-      setError(getTransactionErrorMessage(err, "Withdraw failed"));
+      setError(getTransactionErrorMessage(err, "Close stream failed"));
       setStatus("error");
       setTimeout(() => setStatus("idle"), 3000);
     }
   };
 
-  const isProcessingStream = (streamPDA: PublicKey) => {
-    return activeStreamId === streamPDA.toBase58()
-      && (status === "preparing" || status === "awaiting_signature" || status === "confirming");
-  };
-
-  return { withdraw, status, error, activeStreamId, isProcessingStream };
+  return { closeStream, status, error };
 }

@@ -1,15 +1,45 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { CircleAlert, CirclePlus, Layers, LoaderCircle } from "lucide-react";
+import { FilterChip } from "@/components/dashboard/FilterChip";
+import { MetricCard } from "@/components/dashboard/MetricCard";
+import { StreamStatusBadge } from "@/components/dashboard/StreamStatusBadge";
 import { useStreams } from "@/hooks/useStreams";
 import { useMintDecimals } from "@/hooks/useMintDecimals";
-import { getStreamStatus, formatTokenAmount, shortenAddress, formatTimeRemaining } from "@/lib/utils/format";
+import { formatTokenAmount, shortenAddress } from "@/lib/utils/format";
+import {
+  deriveStreamLifecycle,
+  getModeLabel,
+  getStreamUrgencyScore,
+  matchesStreamFilter,
+  type StreamFilterStatus,
+  type StreamMode,
+} from "@/lib/utils/streamLifecycle";
+
+const statusFilters: Array<{ value: StreamFilterStatus; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "action-needed", label: "Needs action" },
+  { value: "claimable", label: "Claimable" },
+  { value: "awaiting-milestone", label: "Awaiting milestone" },
+  { value: "ready-to-close", label: "Ready to close" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+const modeFilters: Array<{ value: "all" | StreamMode; label: string }> = [
+  { value: "all", label: "All modes" },
+  { value: "time-based", label: "Time-based" },
+  { value: "milestone-based", label: "Milestone" },
+];
 
 export default function CreatorDashboardPage() {
   const { data: streams, isLoading, error, refetch } = useStreams("creator");
   const { data: mintDecimals = {} } = useMintDecimals(streams?.map((stream) => stream.mint) ?? []);
   const errorMessage = error instanceof Error ? error.message : "Unknown error";
+  const [selectedStatus, setSelectedStatus] = useState<StreamFilterStatus>("all");
+  const [selectedMode, setSelectedMode] = useState<"all" | StreamMode>("all");
 
   if (isLoading) {
     return (
@@ -55,9 +85,34 @@ export default function CreatorDashboardPage() {
     );
   }
 
-  const active = streams.filter((s) => getStreamStatus(s) === "active").length;
-  const completed = streams.filter((s) => getStreamStatus(s) === "completed").length;
-  const cancelled = streams.filter((s) => getStreamStatus(s) === "cancelled").length;
+  const streamRows = streams
+    .map((stream) => ({
+      stream,
+      lifecycle: deriveStreamLifecycle(stream),
+    }))
+    .sort((a, b) => {
+      const urgencyDelta = getStreamUrgencyScore(b.lifecycle) - getStreamUrgencyScore(a.lifecycle);
+      if (urgencyDelta !== 0) return urgencyDelta;
+
+      return b.lifecycle.breakdown.claimable - a.lifecycle.breakdown.claimable;
+    });
+
+  const claimableNow = streamRows.filter((row) => row.lifecycle.breakdown.claimable > 0).length;
+  const awaitingMilestone = streamRows.filter((row) => row.lifecycle.status === "awaiting_milestone").length;
+  const readyToClose = streamRows.filter((row) => row.lifecycle.readyToClose).length;
+  const avgVestedProgress = streamRows.length > 0
+    ? Math.round(streamRows.reduce((sum, row) => sum + row.lifecycle.breakdown.vestingProgressPct, 0) / streamRows.length)
+    : 0;
+  const avgClaimProgress = streamRows.length > 0
+    ? Math.round(streamRows.reduce((sum, row) => sum + row.lifecycle.breakdown.claimProgressPct, 0) / streamRows.length)
+    : 0;
+
+  const filteredRows = streamRows.filter(({ lifecycle }) => {
+    if (!matchesStreamFilter(lifecycle, selectedStatus)) return false;
+    if (selectedMode !== "all" && lifecycle.mode !== selectedMode) return false;
+
+    return true;
+  });
 
   return (
     <div>
@@ -74,66 +129,82 @@ export default function CreatorDashboardPage() {
         </Link>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="border border-zinc-200 rounded-xl bg-white p-4">
-          <p className="text-[11px] text-zinc-400 uppercase tracking-wide">Total</p>
-          <p className="text-2xl font-bold text-zinc-900 font-mono mt-1">{streams.length}</p>
+      <div className="grid grid-cols-2 gap-4 mb-8 xl:grid-cols-6">
+        <MetricCard label="Total Streams" value={streams.length} hint="All creator-owned streams" />
+        <MetricCard label="Avg Vested" value={`${avgVestedProgress}%`} hint="Average vesting progress" />
+        <MetricCard label="Avg Claimed" value={`${avgClaimProgress}%`} hint="Average claimed progress" />
+        <MetricCard label="Claimable Now" value={claimableNow} hint="Recipients can withdraw" />
+        <MetricCard label="Awaiting Milestone" value={awaitingMilestone} hint="Needs creator follow-up" />
+        <MetricCard label="Ready To Close" value={readyToClose} hint="Lifecycle already settled" />
+      </div>
+
+      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-4">
+        <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-900">Filters</h2>
+            <p className="text-xs text-zinc-500">Sorted by urgency first so close-ready and action-needed streams stay on top.</p>
+          </div>
+          <p className="text-xs text-zinc-400">{filteredRows.length} of {streamRows.length} streams shown</p>
         </div>
-        <div className="border border-zinc-200 rounded-xl bg-white p-4">
-          <p className="text-[11px] text-zinc-400 uppercase tracking-wide">Active</p>
-          <p className="text-2xl font-bold text-zinc-900 font-mono mt-1">{active}</p>
+
+        <div className="flex flex-wrap gap-2">
+          {statusFilters.map((filter) => (
+            <FilterChip
+              key={filter.value}
+              active={selectedStatus === filter.value}
+              label={filter.label}
+              onClick={() => setSelectedStatus(filter.value)}
+            />
+          ))}
         </div>
-        <div className="border border-zinc-200 rounded-xl bg-white p-4">
-          <p className="text-[11px] text-zinc-400 uppercase tracking-wide">Completed</p>
-          <p className="text-2xl font-bold text-zinc-900 font-mono mt-1">{completed}</p>
-        </div>
-        <div className="border border-zinc-200 rounded-xl bg-white p-4">
-          <p className="text-[11px] text-zinc-400 uppercase tracking-wide">Cancelled</p>
-          <p className="text-2xl font-bold text-zinc-900 font-mono mt-1">{cancelled}</p>
+
+        <div className="flex flex-wrap gap-2">
+          {modeFilters.map((filter) => (
+            <FilterChip
+              key={filter.value}
+              active={selectedMode === filter.value}
+              label={filter.label}
+              onClick={() => setSelectedMode(filter.value)}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Table */}
       <div className="border border-zinc-200 rounded-xl bg-white overflow-hidden">
-        <div className="grid grid-cols-[1.4fr_0.9fr_0.9fr_0.8fr_0.9fr_0.6fr] gap-3 px-5 py-3 border-b border-zinc-100 text-[11px] text-zinc-400 uppercase tracking-wide">
+        <div className="grid grid-cols-[1.2fr_0.8fr_0.9fr_0.9fr_0.9fr_0.8fr] gap-3 px-5 py-3 border-b border-zinc-100 text-[11px] text-zinc-400 uppercase tracking-wide">
           <span>Recipient</span>
-          <span>Total</span>
-          <span>Withdrawn</span>
-          <span>Progress</span>
-          <span>Time Left</span>
+          <span>Mode</span>
+          <span>Vested</span>
+          <span>Claimable</span>
+          <span>Next Event</span>
           <span>Status</span>
         </div>
-        {streams.map((stream) => {
-          const status = getStreamStatus(stream);
+        {filteredRows.map(({ stream, lifecycle }) => {
           const decimals = mintDecimals[stream.mint.toBase58()] ?? 6;
-          const pct = stream.totalAmount > 0 ? Math.round((stream.withdrawnAmount / stream.totalAmount) * 100) : 0;
+
           return (
             <Link
               key={stream.publicKey.toBase58()}
               href={`/streams/${stream.publicKey.toBase58()}`}
-              className="grid grid-cols-[1.4fr_0.9fr_0.9fr_0.8fr_0.9fr_0.6fr] gap-3 items-center px-5 py-3.5 border-b border-zinc-50 hover:bg-zinc-50/50 transition-colors text-sm"
+              className="grid grid-cols-[1.2fr_0.8fr_0.9fr_0.9fr_0.9fr_0.8fr] gap-3 items-center px-5 py-3.5 border-b border-zinc-50 hover:bg-zinc-50/50 transition-colors text-sm"
             >
-              <span className="text-zinc-900 font-mono text-xs">{shortenAddress(stream.recipient, 6)}</span>
-              <span className="text-zinc-600 font-mono text-xs">{formatTokenAmount(stream.totalAmount, decimals)}</span>
-              <span className="text-zinc-600 font-mono text-xs">{formatTokenAmount(stream.withdrawnAmount, decimals)}</span>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-violet-500 rounded-full" style={{ width: `${pct}%` }} />
-                </div>
-                <span className="text-[11px] text-zinc-500 font-mono">{pct}%</span>
+              <div>
+                <p className="font-mono text-xs text-zinc-900">{shortenAddress(stream.recipient, 6)}</p>
+                <p className="mt-1 text-[11px] text-zinc-400">Claimed {formatTokenAmount(lifecycle.breakdown.claimed, decimals)}</p>
               </div>
-              <span className="text-zinc-500 font-mono text-xs">{formatTimeRemaining(stream.endTime)}</span>
-              <span
-                className={`text-xs font-medium ${
-                  status === "active" ? "text-emerald-500" : status === "completed" ? "text-violet-500" : "text-zinc-400"
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </span>
+              <span className="text-zinc-500 text-xs">{getModeLabel(lifecycle.mode)}</span>
+              <span className="text-zinc-600 font-mono text-xs">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</span>
+              <span className="font-mono text-xs text-emerald-600">{formatTokenAmount(lifecycle.breakdown.claimable, decimals)}</span>
+              <span className="text-zinc-500 text-xs">{lifecycle.nextEventLabel}</span>
+              <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
             </Link>
           );
         })}
+        {filteredRows.length === 0 ? (
+          <div className="px-5 py-10 text-center text-sm text-zinc-500">
+            No streams match the current filters.
+          </div>
+        ) : null}
       </div>
     </div>
   );

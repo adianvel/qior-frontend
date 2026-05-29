@@ -105,6 +105,28 @@ export const IDL: TdpSolana = {
       ],
       args: [],
     },
+    {
+      name: "closeStream",
+      discriminator: [255, 241, 196, 212, 95, 93, 160, 89],
+      accounts: [
+        { name: "creator", writable: true, signer: true },
+        { name: "stream", writable: true },
+        { name: "escrowTokenAccount", writable: true },
+        { name: "escrowAuthority" },
+        { name: "tokenProgram" },
+        { name: "systemProgram" },
+      ],
+      args: [],
+    },
+    {
+      name: "setMilestone",
+      discriminator: [174, 213, 91, 82, 156, 42, 105, 3],
+      accounts: [
+        { name: "creator", writable: true, signer: true },
+        { name: "stream", writable: true },
+      ],
+      args: [],
+    },
   ],
   accounts: [
     {
