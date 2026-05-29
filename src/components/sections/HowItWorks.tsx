@@ -77,7 +77,7 @@ function StepGlyph({ index }: { index: number }) {
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="relative bg-[#f8f8fa] px-4 py-6 md:flex md:min-h-screen md:px-8 md:py-8">
+    <section id="how-it-works" className="relative bg-white px-4 py-6 md:flex md:min-h-screen md:px-8 md:py-8">
       <div className="mx-auto flex w-full max-w-[1500px] flex-col md:flex-1 md:justify-center">
         <motion.h2
           initial={false}

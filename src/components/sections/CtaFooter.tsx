@@ -30,11 +30,9 @@ function InstagramIcon({ className }: { className?: string }) {
 export function CtaFooter() {
   return (
     <>
-      <section className="relative flex min-h-[86dvh] items-center justify-center overflow-hidden bg-[#f8f8fa] px-6 py-28 text-center md:px-10 md:py-36">
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,#f8f8fa_0%,rgba(248,248,250,0)_18%,rgba(248,248,250,0)_76%,#f8f8fa_100%)]" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[82%] bg-[radial-gradient(ellipse_at_16%_100%,rgba(124,58,237,0.76)_0%,rgba(167,139,250,0.66)_28%,transparent_54%),radial-gradient(ellipse_at_74%_88%,rgba(109,40,217,0.64)_0%,rgba(196,181,253,0.58)_34%,transparent_62%),radial-gradient(ellipse_at_42%_56%,rgba(255,255,255,0.92)_0%,rgba(245,243,255,0.78)_30%,transparent_64%)]" />
-        <div className="pointer-events-none absolute inset-x-[-10%] bottom-[-22%] h-[70%] bg-[radial-gradient(ellipse_at_36%_48%,rgba(255,255,255,0.72),transparent_58%),radial-gradient(ellipse_at_62%_76%,rgba(124,58,237,0.52),transparent_56%)] blur-[38px]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.12] mix-blend-soft-light bg-[url('data:image/svg+xml,%3Csvg_viewBox=%220_0_256_256%22_xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter_id=%22noise%22%3E%3CfeTurbulence_type=%22fractalNoise%22_baseFrequency=%220.72%22_numOctaves=%224%22_stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect_width=%22256%22_height=%22256%22_filter=%22url(%23noise)%22_opacity=%220.45%22/%3E%3C/svg%3E')]" />
+      <section className="relative flex min-h-[86dvh] items-center justify-center overflow-hidden bg-white px-6 py-28 text-center md:px-10 md:py-36">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[72%] bg-[radial-gradient(ellipse_at_18%_100%,rgba(124,58,237,0.5)_0%,rgba(167,139,250,0.34)_28%,transparent_56%),radial-gradient(ellipse_at_74%_92%,rgba(109,40,217,0.36)_0%,rgba(196,181,253,0.34)_34%,transparent_64%)]" />
+        <div className="pointer-events-none absolute inset-x-[-10%] bottom-[-28%] h-[62%] bg-[radial-gradient(ellipse_at_42%_58%,rgba(255,255,255,0.78),transparent_58%),radial-gradient(ellipse_at_62%_76%,rgba(124,58,237,0.34),transparent_58%)] blur-[38px]" />
 
         <div className="relative z-10 mx-auto flex max-w-[900px] flex-col items-center">
           <motion.h2
@@ -74,7 +72,7 @@ export function CtaFooter() {
         </div>
       </section>
 
-      <footer className="border-t border-zinc-200 bg-[#f8f8fa] px-6 py-12 md:px-10">
+      <footer className="border-t border-zinc-200 bg-white px-6 py-12 md:px-10">
         <div className="mx-auto grid max-w-[1400px] gap-12 lg:grid-cols-[1.1fr_2fr]">
           <div className="max-w-sm">
             <Image src="/logo-qior.avif" alt="Qior" width={120} height={40} className="h-16 w-auto" />
