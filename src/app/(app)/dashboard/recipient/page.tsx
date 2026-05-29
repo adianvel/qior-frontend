@@ -65,10 +65,13 @@ export default function RecipientDashboardPage() {
         return b.lifecycle.breakdown.claimable - a.lifecycle.breakdown.claimable;
       }
 
-      return Number(b.lifecycle.status === "awaiting_milestone") - Number(a.lifecycle.status === "awaiting_milestone");
+      const aTime = a.lifecycle.nextUnlockAt ?? Number.POSITIVE_INFINITY;
+      const bTime = b.lifecycle.nextUnlockAt ?? Number.POSITIVE_INFINITY;
+      if (aTime !== bTime) return aTime - bTime;
+
+      return Number(a.lifecycle.status === "awaiting_milestone") - Number(b.lifecycle.status === "awaiting_milestone");
     });
 
-  const totalClaimable = streamRows.reduce((sum, row) => sum + row.lifecycle.breakdown.claimable, 0);
   const claimableCount = streamRows.filter((row) => row.lifecycle.breakdown.claimable > 0).length;
   const waitingMilestoneCount = streamRows.filter((row) => row.lifecycle.status === "awaiting_milestone").length;
   const claimableRows = streamRows.filter((row) => row.lifecycle.breakdown.claimable > 0);
@@ -79,6 +82,26 @@ export default function RecipientDashboardPage() {
     && row.lifecycle.status !== "completed"
     && row.lifecycle.status !== "cancelled"
   );
+  const claimableMintBreakdown = Array.from(
+    claimableRows.reduce((map, row) => {
+      const mintAddress = row.stream.mint.toBase58();
+      const current = map.get(mintAddress) ?? {
+        mintAddress,
+        decimals: mintDecimals[mintAddress] ?? 6,
+        total: 0,
+      };
+      current.total += row.lifecycle.breakdown.claimable;
+      map.set(mintAddress, current);
+      return map;
+    }, new Map<string, { mintAddress: string; decimals: number; total: number }>())
+      .values()
+  );
+  const claimableMintSummary = claimableMintBreakdown.length === 0
+    ? "No claimable balances yet"
+    : claimableMintBreakdown
+      .slice(0, 2)
+      .map((entry) => `${formatTokenAmount(entry.total, entry.decimals)} ${shortenAddress(entry.mintAddress, 4)}`)
+      .join(" • ");
 
   const getRecipientStateMessage = (nextEventLabel: string, status: string) => {
     if (status === "awaiting_milestone") return "Waiting for the creator to mark the milestone as completed.";
@@ -104,7 +127,7 @@ export default function RecipientDashboardPage() {
         <MetricCard label="Incoming Streams" value={streams.length} hint="All allocations to your wallet" />
         <MetricCard label="Claimable Now" value={claimableCount} hint="Streams ready to withdraw" />
         <MetricCard label="Waiting Milestone" value={waitingMilestoneCount} hint="Needs creator confirmation" />
-        <MetricCard label="Claimable Amount" value={formatTokenAmount(totalClaimable, 6)} hint="Mixed-mint approximation" />
+        <MetricCard label="Claimable Mints" value={claimableMintBreakdown.length} hint={claimableMintSummary} />
       </div>
 
       <div className="mb-8 grid gap-6 xl:grid-cols-3">

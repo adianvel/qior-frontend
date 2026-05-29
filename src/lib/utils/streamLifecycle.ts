@@ -31,6 +31,7 @@ export type DerivedStreamLifecycle = {
   readyToClose: boolean;
   breakdown: StreamAmountBreakdown;
   nextEventLabel: string;
+  nextUnlockAt: number | null;
 };
 
 export type StreamFilterStatus =
@@ -185,6 +186,19 @@ export function getStreamNextEventLabel(stream: LifecycleStream, now = Math.floo
   return `Ends ${formatRelativeTimestamp(stream.endTime, now)}`;
 }
 
+export function getStreamNextUnlockTimestamp(
+  stream: LifecycleStream,
+  now = Math.floor(Date.now() / 1000)
+): number | null {
+  if (stream.canceled || stream.withdrawnAmount >= stream.totalAmount) return null;
+  if (stream.milestoneBased) return stream.milestoneReached ? now : null;
+  if (now < stream.startTime) return stream.startTime;
+  if (now < stream.cliffTime) return stream.cliffTime;
+  if (now < stream.endTime) return stream.endTime;
+
+  return null;
+}
+
 export function deriveStreamLifecycle(
   stream: LifecycleStream,
   now = Math.floor(Date.now() / 1000)
@@ -195,6 +209,7 @@ export function deriveStreamLifecycle(
     readyToClose: isStreamReadyToClose(stream),
     breakdown: getStreamAmountBreakdown(stream, now),
     nextEventLabel: getStreamNextEventLabel(stream, now),
+    nextUnlockAt: getStreamNextUnlockTimestamp(stream, now),
   };
 }
 
