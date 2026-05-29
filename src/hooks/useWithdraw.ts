@@ -14,6 +14,7 @@ export function useWithdraw() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<TxStatus>("idle");
   const [error, setError] = useState("");
+  const [activeStreamId, setActiveStreamId] = useState("");
 
   const withdraw = async (streamPDA: PublicKey, streamData: { mint: PublicKey; escrowTokenAccount: PublicKey; escrowBump: number }) => {
     if (!wallet?.publicKey || !sendTransaction) {
@@ -21,6 +22,7 @@ export function useWithdraw() {
       setStatus("error");
       return;
     }
+    setActiveStreamId(streamPDA.toBase58());
     setStatus("preparing");
     setError("");
 
@@ -44,5 +46,10 @@ export function useWithdraw() {
     }
   };
 
-  return { withdraw, status, error };
+  const isProcessingStream = (streamPDA: PublicKey) => {
+    return activeStreamId === streamPDA.toBase58()
+      && (status === "preparing" || status === "awaiting_signature" || status === "confirming");
+  };
+
+  return { withdraw, status, error, activeStreamId, isProcessingStream };
 }

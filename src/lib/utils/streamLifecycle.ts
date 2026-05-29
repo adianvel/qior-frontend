@@ -33,6 +33,15 @@ export type DerivedStreamLifecycle = {
   nextEventLabel: string;
 };
 
+export type StreamFilterStatus =
+  | "all"
+  | "action-needed"
+  | "claimable"
+  | "awaiting-milestone"
+  | "ready-to-close"
+  | "completed"
+  | "cancelled";
+
 type LifecycleStream = Pick<
   StreamAccount,
   | "totalAmount"
@@ -216,5 +225,43 @@ export function getStreamStatusMeta(
       return { label: "Completed", tone: "neutral" };
     case "cancelled":
       return { label: "Cancelled", tone: "danger" };
+  }
+}
+
+export function getStreamUrgencyScore(lifecycle: DerivedStreamLifecycle): number {
+  if (lifecycle.readyToClose) return 6;
+  if (lifecycle.status === "awaiting_milestone") return 5;
+  if (lifecycle.status === "milestone_ready") return 4;
+  if (lifecycle.status === "fully_vested_unclaimed") return 4;
+  if (lifecycle.status === "claimable") return 3;
+  if (lifecycle.status === "cliff_locked") return 2;
+  if (lifecycle.status === "scheduled") return 1;
+
+  return 0;
+}
+
+export function matchesStreamFilter(
+  lifecycle: DerivedStreamLifecycle,
+  filter: StreamFilterStatus
+): boolean {
+  switch (filter) {
+    case "all":
+      return true;
+    case "action-needed":
+      return lifecycle.readyToClose
+        || lifecycle.status === "awaiting_milestone"
+        || lifecycle.status === "claimable"
+        || lifecycle.status === "fully_vested_unclaimed"
+        || lifecycle.status === "milestone_ready";
+    case "claimable":
+      return lifecycle.breakdown.claimable > 0;
+    case "awaiting-milestone":
+      return lifecycle.status === "awaiting_milestone";
+    case "ready-to-close":
+      return lifecycle.readyToClose;
+    case "completed":
+      return lifecycle.status === "completed";
+    case "cancelled":
+      return lifecycle.status === "cancelled";
   }
 }

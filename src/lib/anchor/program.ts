@@ -127,6 +127,7 @@ export async function createStreamTx(
     cliffTime: BN;
     endTime: BN;
     cancelable: boolean;
+    milestoneBased: boolean;
   }
 ) {
   const [streamPDA] = getStreamPDA(creator, params.recipient, params.streamId);
@@ -139,12 +140,12 @@ export async function createStreamTx(
       params.streamId,
       params.recipient,
       params.totalAmount,
-      params.startTime,
-      params.cliffTime,
-      params.endTime,
-      params.cancelable,
-      false // milestoneBased
-    )
+        params.startTime,
+        params.cliffTime,
+        params.endTime,
+        params.cancelable,
+        params.milestoneBased
+      )
     .accounts({
       creator,
       stream: streamPDA,

@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleAlert, CircleCheck, LoaderCircle, Wallet } from "lucide-react";
+import { ActionPanel } from "@/components/dashboard/ActionPanel";
 import { AmountBreakdownBar } from "@/components/dashboard/AmountBreakdownBar";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { StreamStatusBadge } from "@/components/dashboard/StreamStatusBadge";
@@ -13,7 +14,7 @@ import { deriveStreamLifecycle, getModeLabel } from "@/lib/utils/streamLifecycle
 export default function RecipientDashboardPage() {
   const { data: streams, isLoading, error, refetch } = useStreams("recipient");
   const { data: mintDecimals = {} } = useMintDecimals(streams?.map((stream) => stream.mint) ?? []);
-  const { withdraw, status: withdrawStatus, error: withdrawError } = useWithdraw();
+  const { withdraw, status: withdrawStatus, error: withdrawError, activeStreamId, isProcessingStream } = useWithdraw();
   const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
   if (isLoading) {
@@ -70,6 +71,24 @@ export default function RecipientDashboardPage() {
   const totalClaimable = streamRows.reduce((sum, row) => sum + row.lifecycle.breakdown.claimable, 0);
   const claimableCount = streamRows.filter((row) => row.lifecycle.breakdown.claimable > 0).length;
   const waitingMilestoneCount = streamRows.filter((row) => row.lifecycle.status === "awaiting_milestone").length;
+  const claimableRows = streamRows.filter((row) => row.lifecycle.breakdown.claimable > 0);
+  const milestoneRows = streamRows.filter((row) => row.lifecycle.status === "awaiting_milestone");
+  const upcomingRows = streamRows.filter((row) =>
+    row.lifecycle.breakdown.claimable <= 0
+    && row.lifecycle.status !== "awaiting_milestone"
+    && row.lifecycle.status !== "completed"
+    && row.lifecycle.status !== "cancelled"
+  );
+
+  const getRecipientStateMessage = (nextEventLabel: string, status: string) => {
+    if (status === "awaiting_milestone") return "Waiting for the creator to mark the milestone as completed.";
+    if (status === "cliff_locked") return `${nextEventLabel}. Nothing can be withdrawn before the cliff.`;
+    if (status === "scheduled") return `${nextEventLabel}. Vesting has not started yet.`;
+    if (status === "vesting") return `${nextEventLabel}. This stream is unlocking gradually over time.`;
+    if (status === "completed") return "This stream is fully claimed or no further recipient action is needed.";
+
+    return nextEventLabel;
+  };
 
   return (
     <div>
@@ -88,10 +107,49 @@ export default function RecipientDashboardPage() {
         <MetricCard label="Claimable Amount" value={formatTokenAmount(totalClaimable, 6)} hint="Mixed-mint approximation" />
       </div>
 
+      <div className="mb-8 grid gap-6 xl:grid-cols-3">
+        <ActionPanel
+          title="Claimable Now"
+          description="Streams where you can withdraw immediately."
+          emptyMessage="No recipient streams are claimable right now."
+          items={claimableRows.slice(0, 4).map(({ stream, lifecycle }) => ({
+            href: `/streams/${stream.publicKey.toBase58()}`,
+            title: `Claim from ${shortenAddress(stream.creator, 6)}`,
+            subtitle: lifecycle.nextEventLabel,
+            meta: "Withdraw now",
+          }))}
+        />
+        <ActionPanel
+          title="Waiting On Milestones"
+          description="Streams blocked until a creator marks a milestone complete."
+          emptyMessage="No incoming streams are blocked by milestones."
+          items={milestoneRows.slice(0, 4).map(({ stream, lifecycle }) => ({
+            href: `/streams/${stream.publicKey.toBase58()}`,
+            title: `Milestone stream from ${shortenAddress(stream.creator, 6)}`,
+            subtitle: getRecipientStateMessage(lifecycle.nextEventLabel, lifecycle.status),
+            meta: "Waiting",
+          }))}
+        />
+        <ActionPanel
+          title="Upcoming Unlocks"
+          description="Non-claimable streams with a clear next unlock event."
+          emptyMessage="No upcoming unlock events to track right now."
+          items={upcomingRows.slice(0, 4).map(({ stream, lifecycle }) => ({
+            href: `/streams/${stream.publicKey.toBase58()}`,
+            title: `Incoming stream from ${shortenAddress(stream.creator, 6)}`,
+            subtitle: getRecipientStateMessage(lifecycle.nextEventLabel, lifecycle.status),
+            meta: "Track",
+          }))}
+        />
+      </div>
+
       <div className="flex flex-col gap-4">
         {streamRows.map(({ stream, lifecycle }) => {
           const decimals = mintDecimals[stream.mint.toBase58()] ?? 6;
           const claimable = lifecycle.breakdown.claimable;
+          const isBusy = isProcessingStream(stream.publicKey);
+          const isLastSuccessful = withdrawStatus === "success" && activeStreamId === stream.publicKey.toBase58();
+          const isPendingState = withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming";
 
           return (
             <div key={stream.publicKey.toBase58()} className="border border-zinc-200 rounded-xl bg-white p-5">
@@ -106,6 +164,10 @@ export default function RecipientDashboardPage() {
                 </div>
                 <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
               </div>
+
+              <p className="mt-3 text-sm text-zinc-500">
+                {getRecipientStateMessage(lifecycle.nextEventLabel, lifecycle.status)}
+              </p>
 
               <div className="mt-4">
                 <AmountBreakdownBar breakdown={lifecycle.breakdown} compact />
@@ -132,12 +194,12 @@ export default function RecipientDashboardPage() {
                   escrowTokenAccount: stream.escrowTokenAccount,
                   escrowBump: stream.escrowBump,
                 })}
-                disabled={claimable <= 0 || withdrawStatus !== "idle"}
+                disabled={claimable <= 0 || (isPendingState && !isBusy)}
                 className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg active:scale-[0.97] transition-all"
               >
-                {withdrawStatus === "success" ? (
+                {isLastSuccessful ? (
                   <><CircleCheck size={16} /> Withdrawn</>
-                ) : withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming" ? (
+                ) : isBusy ? (
                   <><LoaderCircle size={16} className="animate-spin" /> {
                     withdrawStatus === "preparing" ? "Preparing..." :
                     withdrawStatus === "awaiting_signature" ? "Approve..." :

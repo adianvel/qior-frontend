@@ -6,14 +6,16 @@ import { useParams } from "next/navigation";
 import { PublicKey } from "@solana/web3.js";
 import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CircleAlert, Copy, ExternalLink, LoaderCircle } from "lucide-react";
+import { ArrowLeft, CircleAlert, CircleCheck, Copy, ExternalLink, LoaderCircle } from "lucide-react";
 import { AmountBreakdownBar } from "@/components/dashboard/AmountBreakdownBar";
 import { StreamStatusBadge } from "@/components/dashboard/StreamStatusBadge";
 import { StreamTimeline } from "@/components/dashboard/StreamTimeline";
 import { decodeStreamAccount } from "@/lib/anchor/program";
 import type { StreamAccount } from "@/lib/anchor/types";
+import { useCloseStream } from "@/hooks/useCloseStream";
 import { useCancelStream } from "@/hooks/useCancelStream";
 import { useMintDecimals } from "@/hooks/useMintDecimals";
+import { useSetMilestone } from "@/hooks/useSetMilestone";
 import { useWithdraw } from "@/hooks/useWithdraw";
 import {
   explorerAccountUrl,
@@ -28,8 +30,11 @@ export default function StreamDetailPage() {
   const wallet = useAnchorWallet();
   const { publicKey } = useWallet();
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
   const { cancel, status: cancelStatus, error: cancelError } = useCancelStream();
-  const { withdraw, status: withdrawStatus, error: withdrawError } = useWithdraw();
+  const { closeStream, status: closeStatus, error: closeError } = useCloseStream();
+  const { setMilestone, status: milestoneStatus, error: milestoneError } = useSetMilestone();
+  const { withdraw, status: withdrawStatus, error: withdrawError, activeStreamId, isProcessingStream } = useWithdraw();
 
   const { data: stream, isLoading, error } = useQuery<StreamAccount>({
     queryKey: ["stream", params.streamId, wallet?.publicKey?.toBase58()],
@@ -75,6 +80,27 @@ export default function StreamDetailPage() {
   const claimable = lifecycle.breakdown.claimable;
   const isCreator = publicKey?.equals(stream.creator);
   const isRecipient = publicKey?.equals(stream.recipient);
+  const withdrawBusy = isProcessingStream(stream.publicKey);
+  const withdrawSucceeded = withdrawStatus === "success" && activeStreamId === stream.publicKey.toBase58();
+
+  const getRecipientActionMessage = () => {
+    if (lifecycle.breakdown.claimable > 0) return "You can withdraw unlocked tokens from this stream now.";
+    if (lifecycle.status === "awaiting_milestone") return "Recipient action is blocked until the creator marks the milestone as completed.";
+    if (lifecycle.status === "cliff_locked") return "Recipient action is blocked until the cliff date is reached.";
+    if (lifecycle.status === "scheduled") return "Recipient action is not available until this stream starts.";
+    if (lifecycle.status === "completed") return "No recipient action is left. This stream is already fully settled.";
+
+    return "No recipient action is available at this moment.";
+  };
+
+  const getCreatorActionMessage = () => {
+    if (lifecycle.readyToClose) return "This stream lifecycle is already settled.";
+    if (lifecycle.status === "awaiting_milestone") return "Creator follow-up is needed when the milestone is actually completed.";
+    if (stream.cancelable && lifecycle.status !== "cancelled") return "The creator can cancel this stream while it is still active.";
+    if (!stream.cancelable) return "This stream was created as non-cancelable.";
+
+    return "No creator action is required right now.";
+  };
 
   const handleCancel = async () => {
     await cancel(stream.publicKey, {
@@ -83,6 +109,13 @@ export default function StreamDetailPage() {
       escrowTokenAccount: stream.escrowTokenAccount,
     });
     setShowCancelModal(false);
+  };
+
+  const handleClose = async () => {
+    await closeStream(stream.publicKey, {
+      escrowTokenAccount: stream.escrowTokenAccount,
+    });
+    setShowCloseModal(false);
   };
 
   const copyToClipboard = (text: string | PublicKey) => navigator.clipboard.writeText(text.toString());
@@ -106,6 +139,16 @@ export default function StreamDetailPage() {
       {withdrawError && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {withdrawError}
+        </div>
+      )}
+      {milestoneError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {milestoneError}
+        </div>
+      )}
+      {closeError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {closeError}
         </div>
       )}
 
@@ -137,6 +180,33 @@ export default function StreamDetailPage() {
 
       <div className="mb-4">
         <StreamTimeline stream={stream} mode={lifecycle.mode} />
+      </div>
+
+      <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-5">
+        <h2 className="mb-4 text-sm font-semibold text-zinc-900">Action State</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-xl border border-zinc-100 bg-zinc-50 p-4">
+            <p className="text-[11px] uppercase tracking-wide text-zinc-400">Recipient</p>
+            <p className="mt-2 text-sm text-zinc-700">{getRecipientActionMessage()}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-100 bg-zinc-50 p-4">
+            <p className="text-[11px] uppercase tracking-wide text-zinc-400">Creator</p>
+            <p className="mt-2 text-sm text-zinc-700">{getCreatorActionMessage()}</p>
+          </div>
+        </div>
+
+        {lifecycle.mode === "milestone-based" ? (
+          <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+            <p className="text-sm font-medium text-amber-800">
+              {stream.milestoneReached ? "Milestone reached" : "Milestone pending"}
+            </p>
+            <p className="mt-1 text-sm text-amber-700">
+              {stream.milestoneReached
+                ? "The creator has marked this milestone as complete, so recipient withdrawal depends on remaining claimable balance."
+                : "No vesting is unlocked yet because this stream waits for explicit milestone completion."}
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-5">
@@ -202,29 +272,48 @@ export default function StreamDetailPage() {
       </div>
 
       <div className="flex gap-3">
-        {isRecipient && claimable > 0 && (
+        {isRecipient ? (
           <button
             onClick={() => withdraw(stream.publicKey, {
               mint: stream.mint,
               escrowTokenAccount: stream.escrowTokenAccount,
               escrowBump: stream.escrowBump,
             })}
-            disabled={withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming"}
+            disabled={claimable <= 0 || !isRecipient || (withdrawStatus !== "idle" && !withdrawBusy)}
             className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-violet-500 disabled:opacity-60 active:scale-[0.97]"
           >
-            {withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming" ? (
+            {withdrawBusy ? (
               <><LoaderCircle size={14} className="animate-spin" /> {
                 withdrawStatus === "preparing" ? "Preparing..." :
                 withdrawStatus === "awaiting_signature" ? "Approve..." :
                 "Confirming..."
               }</>
-            ) : withdrawStatus === "success" ? (
+            ) : withdrawSucceeded ? (
               "Withdrawn"
-            ) : (
+            ) : claimable > 0 ? (
               <>Withdraw {formatTokenAmount(claimable, decimals)}</>
+            ) : (
+              "No tokens claimable yet"
             )}
           </button>
-        )}
+        ) : null}
+        {isCreator && lifecycle.mode === "milestone-based" && !stream.milestoneReached && !stream.canceled ? (
+          <button
+            onClick={() => setMilestone(stream.publicKey)}
+            disabled={milestoneStatus === "preparing" || milestoneStatus === "awaiting_signature" || milestoneStatus === "confirming"}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-violet-200 px-4 py-3 text-sm font-medium text-violet-700 transition-all hover:bg-violet-50 disabled:opacity-60 active:scale-[0.97]"
+          >
+            {milestoneStatus === "preparing" || milestoneStatus === "awaiting_signature" || milestoneStatus === "confirming" ? (
+              <><LoaderCircle size={14} className="animate-spin" /> {
+                milestoneStatus === "preparing" ? "Preparing..." :
+                milestoneStatus === "awaiting_signature" ? "Approve..." :
+                "Confirming..."
+              }</>
+            ) : (
+              "Mark Milestone Reached"
+            )}
+          </button>
+        ) : null}
         {isCreator && stream.cancelable && lifecycle.status !== "cancelled" && !lifecycle.readyToClose && (
           <button
             onClick={() => setShowCancelModal(true)}
@@ -233,6 +322,14 @@ export default function StreamDetailPage() {
             Cancel Stream
           </button>
         )}
+        {isCreator && lifecycle.readyToClose ? (
+          <button
+            onClick={() => setShowCloseModal(true)}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-emerald-200 px-4 py-3 text-sm font-medium text-emerald-700 transition-all hover:bg-emerald-50 active:scale-[0.97]"
+          >
+            Close Stream
+          </button>
+        ) : null}
       </div>
 
       {showCancelModal && (
@@ -265,6 +362,43 @@ export default function StreamDetailPage() {
                   }</>
                 ) : (
                   "Confirm Cancel"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCloseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center gap-3">
+              <CircleCheck size={24} className="text-emerald-500" />
+              <h3 className="text-lg font-semibold text-zinc-900">Close Stream?</h3>
+            </div>
+            <p className="mb-6 text-sm text-zinc-500">
+              This closes the settled stream account and returns any remaining account rent to the creator wallet.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCloseModal(false)}
+                className="flex-1 rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+              >
+                Keep Open
+              </button>
+              <button
+                onClick={handleClose}
+                disabled={closeStatus === "preparing" || closeStatus === "awaiting_signature" || closeStatus === "confirming"}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-60"
+              >
+                {closeStatus === "preparing" || closeStatus === "awaiting_signature" || closeStatus === "confirming" ? (
+                  <><LoaderCircle size={14} className="animate-spin" /> {
+                    closeStatus === "preparing" ? "Preparing..." :
+                    closeStatus === "awaiting_signature" ? "Approve..." :
+                    "Closing..."
+                  }</>
+                ) : (
+                  "Confirm Close"
                 )}
               </button>
             </div>
