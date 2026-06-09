@@ -116,19 +116,6 @@ export default function CreatorDashboardPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">My Streams</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">Streams you created as a token distributor.</p>
-        </div>
-        <Link
-          href="/create"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg active:scale-[0.97] transition-all"
-        >
-          <CirclePlus size={14} strokeWidth={2.5} /> New Stream
-        </Link>
-      </div>
-
       <div className="grid grid-cols-2 gap-4 mb-8 xl:grid-cols-6">
         <MetricCard label="Total Streams" value={streams.length} hint="All creator-owned streams" />
         <MetricCard label="Avg Vested" value={`${avgVestedProgress}%`} hint="Average vesting progress" />
@@ -138,13 +125,21 @@ export default function CreatorDashboardPage() {
         <MetricCard label="Ready To Close" value={readyToClose} hint="Lifecycle already settled" />
       </div>
 
-      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-4">
+      <div className="mb-5 flex flex-col gap-4 rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
         <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-zinc-900">Filters</h2>
-            <p className="text-xs text-zinc-500">Sorted by urgency first so close-ready and action-needed streams stay on top.</p>
+            <h1 className="text-lg font-semibold tracking-tight text-zinc-950">My Streams</h1>
+            <p className="text-xs leading-relaxed text-zinc-500">Sorted by urgency first so close-ready and action-needed streams stay on top.</p>
           </div>
-          <p className="text-xs text-zinc-400">{filteredRows.length} of {streamRows.length} streams shown</p>
+          <div className="flex items-center gap-2">
+            <p className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-500">{filteredRows.length} of {streamRows.length} shown</p>
+            <Link
+              href="/create"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-violet-500 active:scale-[0.97]"
+            >
+              <CirclePlus size={13} strokeWidth={2.5} /> New
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -170,8 +165,8 @@ export default function CreatorDashboardPage() {
         </div>
       </div>
 
-      <div className="border border-zinc-200 rounded-xl bg-white overflow-hidden">
-        <div className="grid grid-cols-[1.2fr_0.8fr_0.9fr_0.9fr_0.9fr_0.8fr] gap-3 px-5 py-3 border-b border-zinc-100 text-[11px] text-zinc-400 uppercase tracking-wide">
+      <div className="overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
+        <div className="hidden grid-cols-[1.2fr_0.8fr_0.9fr_0.9fr_0.9fr_0.8fr] gap-3 border-b border-zinc-100 bg-zinc-50 px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 md:grid">
           <span>Recipient</span>
           <span>Mode</span>
           <span>Vested</span>
@@ -186,16 +181,16 @@ export default function CreatorDashboardPage() {
             <Link
               key={stream.publicKey.toBase58()}
               href={`/streams/${stream.publicKey.toBase58()}`}
-              className="grid grid-cols-[1.2fr_0.8fr_0.9fr_0.9fr_0.9fr_0.8fr] gap-3 items-center px-5 py-3.5 border-b border-zinc-50 hover:bg-zinc-50/50 transition-colors text-sm"
+              className="grid gap-3 border-b border-zinc-100 px-5 py-4 text-sm transition-colors hover:bg-zinc-50/80 md:grid-cols-[1.2fr_0.8fr_0.9fr_0.9fr_0.9fr_0.8fr] md:items-center"
             >
               <div>
-                <p className="font-mono text-xs text-zinc-900">{shortenAddress(stream.recipient, 6)}</p>
+                <p className="font-mono text-xs font-semibold text-zinc-950">{shortenAddress(stream.recipient, 6)}</p>
                 <p className="mt-1 text-[11px] text-zinc-400">Claimed {formatTokenAmount(lifecycle.breakdown.claimed, decimals)}</p>
               </div>
-              <span className="text-zinc-500 text-xs">{getModeLabel(lifecycle.mode)}</span>
-              <span className="text-zinc-600 font-mono text-xs">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</span>
-              <span className="font-mono text-xs text-emerald-600">{formatTokenAmount(lifecycle.breakdown.claimable, decimals)}</span>
-              <span className="text-zinc-500 text-xs">{lifecycle.nextEventLabel}</span>
+              <span className="text-xs font-medium text-zinc-500">{getModeLabel(lifecycle.mode)}</span>
+              <span className="font-mono text-xs text-zinc-600">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</span>
+              <span className="font-mono text-xs font-semibold text-violet-600">{formatTokenAmount(lifecycle.breakdown.claimable, decimals)}</span>
+              <span className="text-xs text-zinc-500">{lifecycle.nextEventLabel}</span>
               <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
             </Link>
           );

@@ -121,59 +121,62 @@ export default function StreamDetailPage() {
   const copyToClipboard = (text: string | PublicKey) => navigator.clipboard.writeText(text.toString());
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <Link href="/dashboard/creator" className="mb-6 inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-zinc-900">
+    <div className="mx-auto max-w-4xl">
+      <Link href="/dashboard/creator" className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-950">
         <ArrowLeft size={14} /> Back to streams
       </Link>
 
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Stream Detail</h1>
+      <div className="mb-6 flex items-center justify-between rounded-[32px] border border-zinc-200 bg-white p-5 shadow-[0_18px_70px_rgba(24,24,27,0.055)]">
+        <div>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600">Stream account</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Stream Detail</h1>
+        </div>
         <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
       </div>
 
       {cancelError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {cancelError}
         </div>
       )}
       {withdrawError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {withdrawError}
         </div>
       )}
       {milestoneError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {milestoneError}
         </div>
       )}
       {closeError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {closeError}
         </div>
       )}
 
-      <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-5">
+      <div className="mb-4 rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
         <div className="mb-2 flex justify-between text-sm">
           <span className="text-zinc-500">Lifecycle Progress</span>
-          <span className="font-mono font-semibold text-zinc-900">{lifecycle.breakdown.vestingProgressPct}% vested</span>
+          <span className="font-mono font-semibold text-zinc-950">{lifecycle.breakdown.vestingProgressPct}% vested</span>
         </div>
         <AmountBreakdownBar breakdown={lifecycle.breakdown} />
         <div className="mt-4 grid grid-cols-4 gap-4 border-t border-zinc-100 pt-4">
           <div>
-            <p className="text-[11px] text-zinc-400">Total</p>
-            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(stream.totalAmount, decimals)}</p>
+            <p className="text-[11px] font-medium text-zinc-400">Total</p>
+            <p className="font-mono text-sm font-semibold text-zinc-950">{formatTokenAmount(stream.totalAmount, decimals)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-zinc-400">Vested</p>
-            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</p>
+            <p className="text-[11px] font-medium text-zinc-400">Vested</p>
+            <p className="font-mono text-sm font-semibold text-zinc-950">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-zinc-400">Claimed</p>
-            <p className="font-mono text-sm font-semibold text-zinc-900">{formatTokenAmount(lifecycle.breakdown.claimed, decimals)}</p>
+            <p className="text-[11px] font-medium text-zinc-400">Claimed</p>
+            <p className="font-mono text-sm font-semibold text-zinc-950">{formatTokenAmount(lifecycle.breakdown.claimed, decimals)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-zinc-400">Claimable</p>
-            <p className="font-mono text-sm font-semibold text-emerald-600">{formatTokenAmount(claimable, decimals)}</p>
+            <p className="text-[11px] font-medium text-zinc-400">Claimable</p>
+            <p className="font-mono text-sm font-semibold text-violet-600">{formatTokenAmount(claimable, decimals)}</p>
           </div>
         </div>
       </div>
@@ -182,21 +185,21 @@ export default function StreamDetailPage() {
         <StreamTimeline stream={stream} mode={lifecycle.mode} />
       </div>
 
-      <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-5">
-        <h2 className="mb-4 text-sm font-semibold text-zinc-900">Action State</h2>
+      <div className="mb-4 rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
+        <h2 className="mb-4 text-sm font-semibold text-zinc-950">Action State</h2>
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-zinc-100 bg-zinc-50 p-4">
-            <p className="text-[11px] uppercase tracking-wide text-zinc-400">Recipient</p>
-            <p className="mt-2 text-sm text-zinc-700">{getRecipientActionMessage()}</p>
+          <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Recipient</p>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-700">{getRecipientActionMessage()}</p>
           </div>
-          <div className="rounded-xl border border-zinc-100 bg-zinc-50 p-4">
-            <p className="text-[11px] uppercase tracking-wide text-zinc-400">Creator</p>
-            <p className="mt-2 text-sm text-zinc-700">{getCreatorActionMessage()}</p>
+          <div className="rounded-2xl border border-zinc-100 bg-zinc-50 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Creator</p>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-700">{getCreatorActionMessage()}</p>
           </div>
         </div>
 
         {lifecycle.mode === "milestone-based" ? (
-          <div className="mt-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+          <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
             <p className="text-sm font-medium text-amber-800">
               {stream.milestoneReached ? "Milestone reached" : "Milestone pending"}
             </p>
@@ -209,8 +212,8 @@ export default function StreamDetailPage() {
         ) : null}
       </div>
 
-      <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-5">
-        <h2 className="mb-4 text-sm font-semibold text-zinc-900">Stream Info</h2>
+      <div className="mb-4 rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
+        <h2 className="mb-4 text-sm font-semibold text-zinc-950">Stream Info</h2>
         <div className="flex flex-col gap-3">
           {[
             { label: "Creator", value: stream.creator },
@@ -219,9 +222,9 @@ export default function StreamDetailPage() {
             { label: "Escrow", value: stream.escrowTokenAccount },
           ].map((row) => (
             <div key={row.label} className="flex items-center justify-between">
-              <span className="text-xs text-zinc-400">{row.label}</span>
+              <span className="text-xs font-medium text-zinc-400">{row.label}</span>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs text-zinc-700">
+                <span className="font-mono text-xs font-medium text-zinc-700">
                   {row.value.toString().slice(0, 8)}...{row.value.toString().slice(-6)}
                 </span>
                 <a
@@ -271,7 +274,7 @@ export default function StreamDetailPage() {
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         {isRecipient ? (
           <button
             onClick={() => withdraw(stream.publicKey, {
@@ -280,7 +283,7 @@ export default function StreamDetailPage() {
               escrowBump: stream.escrowBump,
             })}
             disabled={claimable <= 0 || !isRecipient || (withdrawStatus !== "idle" && !withdrawBusy)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-violet-600 px-4 py-3 text-sm font-medium text-white transition-all hover:bg-violet-500 disabled:opacity-60 active:scale-[0.97]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 active:scale-[0.97]"
           >
             {withdrawBusy ? (
               <><LoaderCircle size={14} className="animate-spin" /> {
@@ -301,7 +304,7 @@ export default function StreamDetailPage() {
           <button
             onClick={() => setMilestone(stream.publicKey)}
             disabled={milestoneStatus === "preparing" || milestoneStatus === "awaiting_signature" || milestoneStatus === "confirming"}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-violet-200 px-4 py-3 text-sm font-medium text-violet-700 transition-all hover:bg-violet-50 disabled:opacity-60 active:scale-[0.97]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-semibold text-violet-700 transition-all hover:bg-violet-50 disabled:opacity-60 active:scale-[0.97]"
           >
             {milestoneStatus === "preparing" || milestoneStatus === "awaiting_signature" || milestoneStatus === "confirming" ? (
               <><LoaderCircle size={14} className="animate-spin" /> {
@@ -317,7 +320,7 @@ export default function StreamDetailPage() {
         {isCreator && stream.cancelable && lifecycle.status !== "cancelled" && !lifecycle.readyToClose && (
           <button
             onClick={() => setShowCancelModal(true)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 px-4 py-3 text-sm font-medium text-red-600 transition-all hover:bg-red-50 active:scale-[0.97]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 active:scale-[0.97]"
           >
             Cancel Stream
           </button>
@@ -325,7 +328,7 @@ export default function StreamDetailPage() {
         {isCreator && lifecycle.readyToClose ? (
           <button
             onClick={() => setShowCloseModal(true)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-emerald-200 px-4 py-3 text-sm font-medium text-emerald-700 transition-all hover:bg-emerald-50 active:scale-[0.97]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-50 active:scale-[0.97]"
           >
             Close Stream
           </button>
@@ -334,7 +337,7 @@ export default function StreamDetailPage() {
 
       {showCancelModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+          <div className="mx-4 w-full max-w-sm rounded-[28px] bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center gap-3">
               <CircleAlert size={24} className="text-red-500" />
               <h3 className="text-lg font-semibold text-zinc-900">Cancel Stream?</h3>
@@ -345,14 +348,14 @@ export default function StreamDetailPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCancelModal(false)}
-                className="flex-1 rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                className="flex-1 rounded-2xl border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
               >
                 Keep Stream
               </button>
               <button
                 onClick={handleCancel}
                 disabled={cancelStatus === "preparing" || cancelStatus === "awaiting_signature" || cancelStatus === "confirming"}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:opacity-60"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-500 disabled:opacity-60"
               >
                 {cancelStatus === "preparing" || cancelStatus === "awaiting_signature" || cancelStatus === "confirming" ? (
                   <><LoaderCircle size={14} className="animate-spin" /> {
@@ -371,7 +374,7 @@ export default function StreamDetailPage() {
 
       {showCloseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+          <div className="mx-4 w-full max-w-sm rounded-[28px] bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center gap-3">
               <CircleCheck size={24} className="text-emerald-500" />
               <h3 className="text-lg font-semibold text-zinc-900">Close Stream?</h3>
@@ -382,14 +385,14 @@ export default function StreamDetailPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCloseModal(false)}
-                className="flex-1 rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                className="flex-1 rounded-2xl border border-zinc-200 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
               >
                 Keep Open
               </button>
               <button
                 onClick={handleClose}
                 disabled={closeStatus === "preparing" || closeStatus === "awaiting_signature" || closeStatus === "confirming"}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-500 disabled:opacity-60"
+                className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-60"
               >
                 {closeStatus === "preparing" || closeStatus === "awaiting_signature" || closeStatus === "confirming" ? (
                   <><LoaderCircle size={14} className="animate-spin" /> {

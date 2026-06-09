@@ -115,10 +115,13 @@ export default function RecipientDashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Incoming Streams</h1>
-      <p className="text-sm text-zinc-500 mt-0.5 mb-8">Tokens being vested to your wallet.</p>
+      <div className="mb-8 rounded-[32px] border border-zinc-200 bg-white p-5 shadow-[0_18px_70px_rgba(24,24,27,0.055)]">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600">Recipient workspace</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Incoming Streams</h1>
+        <p className="mt-2 text-sm leading-relaxed text-zinc-500">Tokens being vested to your wallet.</p>
+      </div>
       {withdrawError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {withdrawError}
         </div>
       )}
@@ -175,20 +178,20 @@ export default function RecipientDashboardPage() {
           const isPendingState = withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming";
 
           return (
-            <div key={stream.publicKey.toBase58()} className="border border-zinc-200 rounded-xl bg-white p-5">
+            <div key={stream.publicKey.toBase58()} className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs text-zinc-400">From</p>
-                  <p className="text-sm font-mono text-zinc-900">{shortenAddress(stream.creator, 6)}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">From</p>
+                  <p className="mt-1 font-mono text-sm font-semibold text-zinc-950">{shortenAddress(stream.creator, 6)}</p>
                   <div className="mt-1 flex items-center gap-2">
-                    <span className="text-xs text-zinc-400">{getModeLabel(lifecycle.mode)}</span>
+                    <span className="text-xs font-medium text-zinc-400">{getModeLabel(lifecycle.mode)}</span>
                     <span className="text-xs text-zinc-400">{lifecycle.nextEventLabel}</span>
                   </div>
                 </div>
                 <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
               </div>
 
-              <p className="mt-3 text-sm text-zinc-500">
+              <p className="mt-3 text-sm leading-relaxed text-zinc-500">
                 {getRecipientStateMessage(lifecycle.nextEventLabel, lifecycle.status)}
               </p>
 
@@ -196,18 +199,18 @@ export default function RecipientDashboardPage() {
                 <AmountBreakdownBar breakdown={lifecycle.breakdown} compact />
               </div>
 
-              <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-zinc-100">
+              <div className="mt-4 grid grid-cols-3 gap-4 border-t border-zinc-100 pt-4">
                 <div>
-                  <p className="text-[11px] text-zinc-400">Total</p>
-                  <p className="text-sm font-mono font-semibold text-zinc-900">{formatTokenAmount(stream.totalAmount, decimals)}</p>
+                  <p className="text-[11px] font-medium text-zinc-400">Total</p>
+                  <p className="font-mono text-sm font-semibold text-zinc-950">{formatTokenAmount(stream.totalAmount, decimals)}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-zinc-400">Vested</p>
-                  <p className="text-sm font-mono font-semibold text-zinc-900">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</p>
+                  <p className="text-[11px] font-medium text-zinc-400">Vested</p>
+                  <p className="font-mono text-sm font-semibold text-zinc-950">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</p>
                 </div>
                 <div>
-                  <p className="text-[11px] text-zinc-400">Claimable</p>
-                  <p className="text-sm font-mono font-semibold text-emerald-600">{formatTokenAmount(claimable, decimals)}</p>
+                  <p className="text-[11px] font-medium text-zinc-400">Claimable</p>
+                  <p className="font-mono text-sm font-semibold text-violet-600">{formatTokenAmount(claimable, decimals)}</p>
                 </div>
               </div>
 
@@ -218,7 +221,7 @@ export default function RecipientDashboardPage() {
                   escrowBump: stream.escrowBump,
                 })}
                 disabled={claimable <= 0 || (isPendingState && !isBusy)}
-                className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg active:scale-[0.97] transition-all"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.97]"
               >
                 {isLastSuccessful ? (
                   <><CircleCheck size={16} /> Withdrawn</>
