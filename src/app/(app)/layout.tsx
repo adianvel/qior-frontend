@@ -1,18 +1,13 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { CirclePlus, House, Layers, LayoutDashboard, LogOut, Wallet } from "lucide-react";
-
-const WalletMultiButton = dynamic(
-  () => import("@solana/wallet-adapter-react-ui").then((mod) => mod.WalletMultiButton),
-  { ssr: false }
-);
+import { CirclePlus, House, Layers, LogOut, Wallet } from "lucide-react";
+import { WalletButton } from "@/components/wallet/WalletButton";
 
 const navItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/creator", label: "My Streams", icon: Layers },
   { href: "/dashboard/recipient", label: "Incoming", icon: Wallet },
   { href: "/create", label: "Create Stream", icon: CirclePlus },
@@ -23,37 +18,41 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { connected, disconnect } = useWallet();
 
   return (
-    <div className="flex min-h-[100dvh] bg-[#f8f8fa]">
-      {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-56 border-r border-zinc-200 bg-white py-6 px-4">
-        <Link href="/" className="text-lg font-bold text-zinc-900 px-3 mb-8">
-          Qior
+    <div className="flex h-[100dvh] overflow-hidden bg-[#f3f2f6] text-zinc-950">
+      <aside className="hidden h-[100dvh] w-[268px] shrink-0 overflow-hidden border-r border-zinc-200/80 bg-white/90 px-4 py-4 shadow-[1px_0_0_rgba(24,24,27,0.03)] backdrop-blur md:flex md:flex-col">
+        <Link href="/" className="mb-5 flex h-10 items-center gap-3 rounded-2xl px-3">
+          <Image src="/logo-qior.avif" alt="Qior" width={82} height={28} className="h-7 w-auto" priority />
+          <span className="text-lg font-semibold tracking-tight text-zinc-950">Qior</span>
         </Link>
 
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-col gap-1.5">
           {navItems.map((item) => {
             const active = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                className={`group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition-all ${
                   active
-                    ? "bg-violet-50 text-violet-600 font-medium"
-                    : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+                    ? "bg-zinc-950 text-white"
+                    : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950"
                 }`}
               >
-                <item.icon size={18} strokeWidth={active ? 2.5 : 1.75} />
-                {item.label}
+                <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${
+                  active ? "bg-white/12 text-white" : "bg-white text-zinc-500 shadow-[inset_0_0_0_1px_rgba(24,24,27,0.08)] group-hover:text-zinc-950"
+                }`}>
+                  <item.icon size={17} strokeWidth={active ? 2.35 : 1.9} />
+                </span>
+                <span className="font-medium">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="mt-auto pt-6 px-3">
+        <div className="mt-auto pt-3">
           <button
             onClick={() => { disconnect(); window.location.href = "/"; }}
-            className="flex items-center justify-center gap-2 w-full px-3 py-2 text-xs text-zinc-500 border border-zinc-200 rounded-lg hover:text-red-500 hover:border-red-200 transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-3 py-2.5 text-xs font-medium text-zinc-500 transition-colors hover:border-red-200 hover:text-red-500"
           >
             <LogOut size={14} strokeWidth={2.25} />
             Log out
@@ -61,27 +60,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top bar */}
-        <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-white">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="z-30 flex shrink-0 items-center justify-between border-b border-zinc-200/80 bg-white/82 px-5 py-3.5 backdrop-blur-xl md:px-8">
           <div className="flex items-center gap-4 md:hidden">
-            <Link href="/" className="text-lg font-bold text-zinc-900">Qior</Link>
+            <Link href="/" className="flex items-center">
+              <Image src="/logo-qior.avif" alt="Qior" width={72} height={24} className="h-6 w-auto" />
+              <span className="ml-2 text-lg font-semibold tracking-tight text-zinc-950">Qior</span>
+            </Link>
           </div>
-          <div className="hidden md:block" />
-          <WalletMultiButton className="!bg-violet-600 !hover:bg-violet-500 !rounded-lg !h-9 !text-sm !font-medium" />
+          <div className="hidden text-xs font-medium uppercase tracking-[0.18em] text-zinc-400 md:block">Secure token vesting</div>
+          <WalletButton />
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 p-6 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
           {!connected ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[60vh] gap-4">
-              <House size={48} strokeWidth={1.5} className="text-zinc-300" />
-              <h2 className="text-xl font-semibold text-zinc-900">Connect your wallet</h2>
-              <p className="text-sm text-zinc-500 text-center max-w-sm">
+            <div className="mx-auto flex min-h-[64vh] max-w-lg flex-col items-center justify-center gap-4 rounded-[32px] border border-zinc-200 bg-white p-8 text-center shadow-[0_24px_80px_rgba(24,24,27,0.08)]">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-600 text-white">
+                <House size={30} strokeWidth={1.7} />
+              </div>
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">Connect your wallet</h2>
+              <p className="max-w-sm text-sm leading-relaxed text-zinc-500">
                 Connect a Solana wallet to create streams, view incoming tokens, and manage your distributions.
               </p>
-              <WalletMultiButton className="!bg-violet-600 !rounded-lg !h-10 !text-sm !font-medium mt-2" />
+              <WalletButton />
             </div>
           ) : (
             children

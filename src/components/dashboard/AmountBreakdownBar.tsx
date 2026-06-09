@@ -13,12 +13,12 @@ export function AmountBreakdownBar({ breakdown, compact = false }: AmountBreakdo
 
   return (
     <div>
-      <div className={`flex overflow-hidden rounded-full bg-zinc-100 ${compact ? "h-2" : "h-3"}`}>
-        <div className="bg-violet-600" style={{ width: `${claimedWidth}%` }} />
-        <div className="bg-emerald-500" style={{ width: `${claimableWidth}%` }} />
+      <div className={`flex overflow-hidden rounded-full bg-zinc-100 ring-1 ring-inset ring-zinc-200 ${compact ? "h-2.5" : "h-3.5"}`}>
+        <div className="bg-zinc-950" style={{ width: `${claimedWidth}%` }} />
+        <div className="bg-violet-500" style={{ width: `${claimableWidth}%` }} />
         <div className="bg-zinc-200" style={{ width: `${lockedWidth}%` }} />
       </div>
-      <div className={`mt-2 grid gap-2 text-[11px] text-zinc-500 ${compact ? "grid-cols-3" : "grid-cols-4"}`}>
+      <div className={`mt-2 grid gap-2 text-[11px] font-medium text-zinc-500 ${compact ? "grid-cols-3" : "grid-cols-4"}`}>
         <span>Vested {breakdown.vestingProgressPct}%</span>
         <span>Claimed {breakdown.claimProgressPct}%</span>
         <span>Claimable now</span>
