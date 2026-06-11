@@ -19,7 +19,7 @@ export function StreamStatusBadge({ status, readyToClose = false }: StreamStatus
   const meta = getStreamStatusMeta(status, readyToClose);
 
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${toneClasses[meta.tone]}`}>
+    <span className={`inline-flex w-fit max-w-full items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${toneClasses[meta.tone]}`}>
       {meta.label}
     </span>
   );

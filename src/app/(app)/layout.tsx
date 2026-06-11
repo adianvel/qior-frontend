@@ -34,12 +34,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 className={`group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm transition-all ${
                   active
-                    ? "bg-zinc-950 text-white"
+                    ? "bg-zinc-100 text-zinc-950"
                     : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950"
                 }`}
               >
                 <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${
-                  active ? "bg-white/12 text-white" : "bg-white text-zinc-500 shadow-[inset_0_0_0_1px_rgba(24,24,27,0.08)] group-hover:text-zinc-950"
+                  active ? "bg-zinc-200 text-zinc-950" : "bg-white text-zinc-500 shadow-[inset_0_0_0_1px_rgba(24,24,27,0.08)] group-hover:text-zinc-950"
                 }`}>
                   <item.icon size={17} strokeWidth={active ? 2.35 : 1.9} />
                 </span>
