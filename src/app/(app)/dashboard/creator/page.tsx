@@ -166,7 +166,7 @@ export default function CreatorDashboardPage() {
       </div>
 
       <div className="overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
-        <div className="hidden grid-cols-[1.2fr_0.8fr_0.9fr_0.9fr_0.9fr_0.8fr] gap-3 border-b border-zinc-100 bg-zinc-50 px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 md:grid">
+        <div className="hidden grid-cols-[1.2fr_0.75fr_0.85fr_0.85fr_0.9fr_minmax(132px,0.8fr)] gap-3 border-b border-zinc-100 bg-zinc-50 px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400 md:grid">
           <span>Recipient</span>
           <span>Mode</span>
           <span>Vested</span>
@@ -181,7 +181,7 @@ export default function CreatorDashboardPage() {
             <Link
               key={stream.publicKey.toBase58()}
               href={`/streams/${stream.publicKey.toBase58()}`}
-              className="grid gap-3 border-b border-zinc-100 px-5 py-4 text-sm transition-colors hover:bg-zinc-50/80 md:grid-cols-[1.2fr_0.8fr_0.9fr_0.9fr_0.9fr_0.8fr] md:items-center"
+              className="grid gap-3 border-b border-zinc-100 px-5 py-4 text-sm transition-colors hover:bg-zinc-50/80 md:grid-cols-[1.2fr_0.75fr_0.85fr_0.85fr_0.9fr_minmax(132px,0.8fr)] md:items-center"
             >
               <div>
                 <p className="font-mono text-xs font-semibold text-zinc-950">{shortenAddress(stream.recipient, 6)}</p>

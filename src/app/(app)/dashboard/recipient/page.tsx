@@ -116,7 +116,6 @@ export default function RecipientDashboardPage() {
   return (
     <div>
       <div className="mb-8 rounded-[32px] border border-zinc-200 bg-white p-5 shadow-[0_18px_70px_rgba(24,24,27,0.055)]">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600">Recipient workspace</p>
         <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Incoming Streams</h1>
         <p className="mt-2 text-sm leading-relaxed text-zinc-500">Tokens being vested to your wallet.</p>
       </div>
