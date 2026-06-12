@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CircleAlert, CirclePlus, Layers, LoaderCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CircleAlert, CirclePlus, Layers, LoaderCircle } from "lucide-react";
 import { FilterChip } from "@/components/dashboard/FilterChip";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { StreamStatusBadge } from "@/components/dashboard/StreamStatusBadge";
@@ -34,12 +34,15 @@ const modeFilters: Array<{ value: "all" | StreamMode; label: string }> = [
   { value: "milestone-based", label: "Milestone" },
 ];
 
+const STREAMS_PER_PAGE = 10;
+
 export default function CreatorDashboardPage() {
   const { data: streams, isLoading, error, refetch } = useStreams("creator");
   const { data: mintDecimals = {} } = useMintDecimals(streams?.map((stream) => stream.mint) ?? []);
   const errorMessage = error instanceof Error ? error.message : "Unknown error";
   const [selectedStatus, setSelectedStatus] = useState<StreamFilterStatus>("all");
   const [selectedMode, setSelectedMode] = useState<"all" | StreamMode>("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   if (isLoading) {
     return (
@@ -97,14 +100,10 @@ export default function CreatorDashboardPage() {
       return b.lifecycle.breakdown.claimable - a.lifecycle.breakdown.claimable;
     });
 
-  const claimableNow = streamRows.filter((row) => row.lifecycle.breakdown.claimable > 0).length;
   const awaitingMilestone = streamRows.filter((row) => row.lifecycle.status === "awaiting_milestone").length;
   const readyToClose = streamRows.filter((row) => row.lifecycle.readyToClose).length;
   const avgVestedProgress = streamRows.length > 0
     ? Math.round(streamRows.reduce((sum, row) => sum + row.lifecycle.breakdown.vestingProgressPct, 0) / streamRows.length)
-    : 0;
-  const avgClaimProgress = streamRows.length > 0
-    ? Math.round(streamRows.reduce((sum, row) => sum + row.lifecycle.breakdown.claimProgressPct, 0) / streamRows.length)
     : 0;
 
   const filteredRows = streamRows.filter(({ lifecycle }) => {
@@ -113,14 +112,18 @@ export default function CreatorDashboardPage() {
 
     return true;
   });
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / STREAMS_PER_PAGE));
+  const page = Math.min(currentPage, totalPages);
+  const pageStart = (page - 1) * STREAMS_PER_PAGE;
+  const pageRows = filteredRows.slice(pageStart, pageStart + STREAMS_PER_PAGE);
+  const firstShown = filteredRows.length === 0 ? 0 : pageStart + 1;
+  const lastShown = Math.min(pageStart + pageRows.length, filteredRows.length);
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-4 mb-8 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 mb-8 lg:grid-cols-4">
         <MetricCard label="Total Streams" value={streams.length} hint="All creator-owned streams" />
         <MetricCard label="Avg Vested" value={`${avgVestedProgress}%`} hint="Average vesting progress" />
-        <MetricCard label="Avg Claimed" value={`${avgClaimProgress}%`} hint="Average claimed progress" />
-        <MetricCard label="Claimable Now" value={claimableNow} hint="Recipients can withdraw" />
         <MetricCard label="Awaiting Milestone" value={awaitingMilestone} hint="Needs creator follow-up" />
         <MetricCard label="Ready To Close" value={readyToClose} hint="Lifecycle already settled" />
       </div>
@@ -132,7 +135,9 @@ export default function CreatorDashboardPage() {
             <p className="text-xs leading-relaxed text-zinc-500">Sorted by urgency first so close-ready and action-needed streams stay on top.</p>
           </div>
           <div className="flex items-center gap-2">
-            <p className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-500">{filteredRows.length} of {streamRows.length} shown</p>
+            <p className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-500">
+              {filteredRows.length === 0 ? "0 shown" : `${firstShown}-${lastShown} of ${filteredRows.length} shown`}
+            </p>
             <Link
               href="/create"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-violet-500 active:scale-[0.97]"
@@ -142,24 +147,28 @@ export default function CreatorDashboardPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {statusFilters.map((filter) => (
             <FilterChip
               key={filter.value}
               active={selectedStatus === filter.value}
               label={filter.label}
-              onClick={() => setSelectedStatus(filter.value)}
+              onClick={() => {
+                setSelectedStatus(filter.value);
+                setCurrentPage(1);
+              }}
             />
           ))}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
+          <span className="mx-1 hidden h-6 w-px bg-zinc-200 lg:inline-flex" />
           {modeFilters.map((filter) => (
             <FilterChip
               key={filter.value}
               active={selectedMode === filter.value}
               label={filter.label}
-              onClick={() => setSelectedMode(filter.value)}
+              onClick={() => {
+                setSelectedMode(filter.value);
+                setCurrentPage(1);
+              }}
             />
           ))}
         </div>
@@ -174,7 +183,7 @@ export default function CreatorDashboardPage() {
           <span>Next Event</span>
           <span>Status</span>
         </div>
-        {filteredRows.map(({ stream, lifecycle }) => {
+        {pageRows.map(({ stream, lifecycle }) => {
           const decimals = mintDecimals[stream.mint.toBase58()] ?? 6;
 
           return (
@@ -189,7 +198,7 @@ export default function CreatorDashboardPage() {
               </div>
               <span className="text-xs font-medium text-zinc-500">{getModeLabel(lifecycle.mode)}</span>
               <span className="font-mono text-xs text-zinc-600">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</span>
-              <span className="font-mono text-xs font-semibold text-violet-600">{formatTokenAmount(lifecycle.breakdown.claimable, decimals)}</span>
+              <span className="font-mono text-xs font-semibold text-zinc-950">{formatTokenAmount(lifecycle.breakdown.claimable, decimals)}</span>
               <span className="text-xs text-zinc-500">{lifecycle.nextEventLabel}</span>
               <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
             </Link>
@@ -201,6 +210,34 @@ export default function CreatorDashboardPage() {
           </div>
         ) : null}
       </div>
+
+      {filteredRows.length > 0 ? (
+        <div className="mt-5 flex justify-center">
+          <div className="inline-flex items-center gap-3 rounded-full bg-zinc-100 p-1 shadow-[inset_0_0_0_1px_rgba(24,24,27,0.05)]">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}
+              disabled={page <= 1}
+              aria-label="Previous page"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-zinc-950 shadow-[0_6px_18px_rgba(24,24,27,0.1)] transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:text-zinc-300 disabled:shadow-none"
+            >
+              <ArrowLeft size={23} strokeWidth={2.1} />
+            </button>
+            <p className="min-w-16 text-center text-base font-semibold text-zinc-600">
+              {page} of {totalPages}
+            </p>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}
+              disabled={page >= totalPages}
+              aria-label="Next page"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-zinc-950 shadow-[0_6px_18px_rgba(24,24,27,0.1)] transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:text-zinc-300 disabled:shadow-none"
+            >
+              <ArrowRight size={23} strokeWidth={2.1} />
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

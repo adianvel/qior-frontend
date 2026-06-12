@@ -5,7 +5,6 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { type ParsedAccountData } from "@solana/web3.js";
 import { useQuery } from "@tanstack/react-query";
-import { formatTokenAmount } from "@/lib/utils/format";
 
 export const USDC_DEV_MINT = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
 export const USDC_DEV_FAUCET_URL = "https://spl-token-faucet.com/?token-name=USDC-Dev";
@@ -106,7 +105,36 @@ function getTokenIdentity(mint: string) {
 
 function formatBalance(amount: string, decimals: number) {
   try {
-    return formatTokenAmount(Number(amount), decimals);
+    const rawAmount = BigInt(amount);
+    if (rawAmount === BigInt(0)) return "0";
+    if (decimals <= 0) return rawAmount.toLocaleString("en-US");
+
+    const visibleDecimals = Math.min(decimals, 2);
+    const base = BigInt(10) ** BigInt(decimals);
+    const displayBase = BigInt(10) ** BigInt(visibleDecimals);
+    const roundingUnit = BigInt(10) ** BigInt(decimals - visibleDecimals);
+    const whole = rawAmount / base;
+    const fraction = rawAmount % base;
+    let displayFraction = (fraction + roundingUnit / BigInt(2)) / roundingUnit;
+    let displayWhole = whole;
+
+    if (displayFraction >= displayBase) {
+      displayWhole += BigInt(1);
+      displayFraction = BigInt(0);
+    }
+
+    if (displayWhole === BigInt(0) && displayFraction === BigInt(0)) {
+      return `<0.${"0".repeat(Math.max(visibleDecimals - 1, 0))}1`;
+    }
+
+    const fractionText = displayFraction
+      .toString()
+      .padStart(visibleDecimals, "0")
+      .replace(/0+$/, "");
+
+    return fractionText
+      ? `${displayWhole.toLocaleString("en-US")}.${fractionText}`
+      : displayWhole.toLocaleString("en-US");
   } catch {
     return undefined;
   }

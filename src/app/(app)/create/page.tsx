@@ -28,11 +28,11 @@ import {
   useAvailableTokens,
 } from "@/hooks/useAvailableTokens";
 import { useCreateStream } from "@/hooks/useCreateStream";
-import { explorerUrl, shortenAddress } from "@/lib/utils/format";
+import { explorerUrl, shortenAddress, toRawTokenAmount } from "@/lib/utils/format";
 
-const SOLANA_LOGO_URL = "https://img.logo.dev/solana.com?token=pk_AI7VymEwQMS1wo0_54TAXg&retina=true";
-const BASE_LOGO_URL = "https://img.logo.dev/name/base?token=pk_AI7VymEwQMS1wo0_54TAXg&retina=true";
-const USDC_LOGO_URL = "https://img.logo.dev/crypto/usdc?token=pk_AI7VymEwQMS1wo0_54TAXg&retina=true";
+const SOLANA_LOGO_URL = "/solana.png";
+const BASE_LOGO_URL = "/base.png";
+const USDC_LOGO_URL = "/usdc.png";
 const IDRX_LOGO_URL = "/idrx.png";
 
 export default function CreateStreamPage() {
@@ -66,6 +66,14 @@ export default function CreateStreamPage() {
     try { new PublicKey(recipient); } catch { return "Invalid recipient address"; }
     try { new PublicKey(mint); } catch { return "Invalid token mint address"; }
     if (!/^[1-9]\d*$/.test(amount.trim())) return "Amount must be a whole number greater than zero";
+    if (selectedToken?.source !== "manual" && selectedToken?.decimals !== undefined) {
+      const requestedAmount = toRawTokenAmount(amount, selectedToken.decimals);
+      const availableAmount = BigInt(selectedToken.balanceRaw ?? "0");
+
+      if (availableAmount < requestedAmount) {
+        return `Insufficient ${selectedToken.symbol} balance`;
+      }
+    }
     if (mode === "milestone-based") return null;
     if (!startDate) return "Start date is required";
     if (!endDate) return "End date is required";
@@ -219,15 +227,17 @@ export default function CreateStreamPage() {
                 id="token-selector"
                 type="button"
                 onClick={() => setTokenModalOpen(true)}
-                className={`flex min-h-12 items-center gap-2 rounded-full border px-2.5 py-2 text-left text-sm font-semibold transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
+                className={`flex min-h-12 cursor-pointer items-center gap-2 rounded-full border p-1 pr-3 text-left text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 active:scale-[0.98] ${
                   selectedToken
-                    ? "border-zinc-200 bg-white text-zinc-950 shadow-[0_8px_24px_rgba(24,24,27,0.08)] hover:border-zinc-300"
+                    ? "border-zinc-200 bg-zinc-100/80 text-zinc-950 shadow-[inset_0_0_0_1px_rgba(24,24,27,0.03)] hover:bg-zinc-100"
                     : "border-violet-200 bg-violet-600 px-4 text-white hover:bg-violet-500"
                 }`}
               >
                 {selectedToken ? (
                   <>
-                    <TokenMark token={selectedToken} compact />
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full">
+                      <TokenMark token={selectedToken} compact />
+                    </span>
                     <span className="max-w-28 truncate text-base">{selectedToken.symbol}</span>
                   </>
                 ) : (
@@ -324,7 +334,7 @@ export default function CreateStreamPage() {
         <button
           type="submit"
           disabled={status === "preparing" || status === "awaiting_signature" || status === "confirming"}
-          className="mt-2 flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60 active:-translate-y-[1px] active:scale-[0.97] focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
+          className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60 active:-translate-y-[1px] active:scale-[0.97] focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/20"
         >
           {status === "preparing" || status === "awaiting_signature" || status === "confirming" ? (
             <><LoaderCircle size={16} className="animate-spin" /> {
@@ -386,6 +396,7 @@ function ScheduleDateTimeField({
   const timeLabel = time || "00:00";
   const [timeDraft, setTimeDraft] = useState(timeLabel);
   const [timeEditing, setTimeEditing] = useState(false);
+  const today = new Date();
   const openDatePicker = () => {
     setCalendarMonth(getCalendarMonth(value));
     setCalendarOpen((open) => !open);
@@ -423,7 +434,7 @@ function ScheduleDateTimeField({
             id={`${id}-date-trigger`}
             type="button"
             onClick={openDatePicker}
-            className="flex h-12 w-full items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 text-left text-sm font-medium text-zinc-950 shadow-[0_8px_24px_rgba(24,24,27,0.04)] transition-all hover:border-zinc-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15"
+            className="flex h-12 w-full cursor-pointer items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 text-left text-sm font-medium text-zinc-950 shadow-[0_8px_24px_rgba(24,24,27,0.04)] transition-all hover:border-zinc-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15"
           >
             <span className={date ? "" : "text-zinc-400"}>{dateLabel}</span>
             <ChevronDown size={16} className="text-violet-600" />
@@ -435,7 +446,7 @@ function ScheduleDateTimeField({
                   type="button"
                   onClick={() => setCalendarMonth((month) => new Date(month.getFullYear(), month.getMonth() - 1, 1))}
                   aria-label="Previous month"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15"
+                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15"
                 >
                   <ChevronLeft size={18} />
                 </button>
@@ -446,7 +457,7 @@ function ScheduleDateTimeField({
                   type="button"
                   onClick={() => setCalendarMonth((month) => new Date(month.getFullYear(), month.getMonth() + 1, 1))}
                   aria-label="Next month"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15"
+                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15"
                 >
                   <ChevronRight size={18} />
                 </button>
@@ -458,6 +469,7 @@ function ScheduleDateTimeField({
                 {calendarDays.map((day) => {
                   const inCurrentMonth = day.getMonth() === calendarMonth.getMonth();
                   const selected = selectedDate ? isSameCalendarDay(day, selectedDate) : false;
+                  const isToday = isSameCalendarDay(day, today);
 
                   return (
                     <button
@@ -467,9 +479,11 @@ function ScheduleDateTimeField({
                         onDateChange(formatInputDate(day));
                         setCalendarOpen(false);
                       }}
-                      className={`mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-sm transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
+                      className={`mx-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-sm transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
                         selected
                           ? "bg-zinc-100 font-semibold text-zinc-950"
+                          : isToday
+                            ? "bg-zinc-100 font-semibold text-zinc-950 ring-1 ring-inset ring-zinc-200"
                           : inCurrentMonth
                             ? "text-zinc-950 hover:bg-zinc-50"
                             : "text-zinc-400 hover:bg-zinc-50"
@@ -514,7 +528,7 @@ function ScheduleDateTimeField({
               setCalendarOpen(false);
             }}
             aria-label="Open time picker"
-            className="-mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15"
+            className="-mr-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15"
           >
             <ClockIcon />
           </button>
@@ -618,7 +632,7 @@ function TimePickerPopover({ value, onChange }: { value: string; onChange: (time
                 key={hour}
                 type="button"
                 onClick={() => onChange(`${hour}:${selectedMinute}`)}
-                className={`mb-1 flex h-9 w-full items-center justify-center rounded-xl font-mono text-sm transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
+                className={`mb-1 flex h-9 w-full cursor-pointer items-center justify-center rounded-xl font-mono text-sm transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
                   selectedHour === hour
                     ? "bg-zinc-100 font-semibold text-zinc-950"
                     : "text-zinc-600 hover:bg-zinc-50"
@@ -637,7 +651,7 @@ function TimePickerPopover({ value, onChange }: { value: string; onChange: (time
                 key={minute}
                 type="button"
                 onClick={() => onChange(`${selectedHour}:${minute}`)}
-                className={`mb-1 flex h-9 w-full items-center justify-center rounded-xl font-mono text-sm transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
+                className={`mb-1 flex h-9 w-full cursor-pointer items-center justify-center rounded-xl font-mono text-sm transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
                   selectedMinute === minute
                     ? "bg-zinc-100 font-semibold text-zinc-950"
                     : "text-zinc-600 hover:bg-zinc-50"
@@ -888,8 +902,8 @@ function TokenSelectModal({ open, tokens, selectedMint, isLoading, onClose, onSe
 
 function TokenMark({ token, compact = false }: { token: TokenOption; compact?: boolean }) {
   const label = token.symbol.slice(0, 2).toUpperCase();
-  const sizeClass = compact ? "h-8 w-8" : "h-11 w-11";
-  const imageSize = compact ? 32 : 44;
+  const sizeClass = compact ? "h-10 w-10" : "h-11 w-11";
+  const imageSize = compact ? 40 : 44;
   const logoUrl = token.mint === WRAPPED_SOL_MINT
     ? SOLANA_LOGO_URL
     : token.mint === BASE_SOON_MINT

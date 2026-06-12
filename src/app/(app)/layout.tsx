@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,6 +17,7 @@ const navItems = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { connected, disconnect } = useWallet();
+  const [contentScrolled, setContentScrolled] = useState(false);
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[#f3f2f6] text-zinc-950">
@@ -52,7 +54,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="mt-auto pt-3">
           <button
             onClick={() => { disconnect(); window.location.href = "/"; }}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-3 py-2.5 text-xs font-medium text-zinc-500 transition-colors hover:border-red-200 hover:text-red-500"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-3 py-2.5 text-xs font-medium text-zinc-500 transition-colors hover:border-red-200 hover:text-red-500"
           >
             <LogOut size={14} strokeWidth={2.25} />
             Log out
@@ -60,8 +62,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="z-30 flex shrink-0 items-center justify-between border-b border-zinc-200/80 bg-white/82 px-5 py-3.5 backdrop-blur-xl md:px-8">
+      <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className={`absolute inset-x-0 top-0 z-30 flex items-center justify-between border-b px-5 py-3.5 backdrop-blur-2xl transition-all duration-200 md:px-8 ${
+          contentScrolled
+            ? "border-white/25 bg-white/18 shadow-[0_14px_40px_rgba(24,24,27,0.08)] backdrop-saturate-150 supports-[backdrop-filter]:bg-white/12"
+            : "border-zinc-200/80 bg-white/82"
+        }`}>
           <div className="flex items-center gap-4 md:hidden">
             <Link href="/" className="flex items-center">
               <Image src="/logo-qior.avif" alt="Qior" width={72} height={24} className="h-6 w-auto" />
@@ -72,7 +78,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <WalletButton />
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main
+          onScroll={(event) => setContentScrolled(event.currentTarget.scrollTop > 8)}
+          className="flex-1 overflow-y-auto p-4 pt-24 md:p-8 md:pt-28"
+        >
           {!connected ? (
             <div className="mx-auto flex min-h-[64vh] max-w-lg flex-col items-center justify-center gap-4 rounded-[32px] border border-zinc-200 bg-white p-8 text-center shadow-[0_24px_80px_rgba(24,24,27,0.08)]">
               <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-600 text-white">
