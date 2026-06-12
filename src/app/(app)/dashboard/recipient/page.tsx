@@ -1,7 +1,6 @@
 "use client";
 
 import { CircleAlert, CircleCheck, LoaderCircle, Wallet } from "lucide-react";
-import { ActionPanel } from "@/components/dashboard/ActionPanel";
 import { AmountBreakdownBar } from "@/components/dashboard/AmountBreakdownBar";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { StreamStatusBadge } from "@/components/dashboard/StreamStatusBadge";
@@ -75,13 +74,6 @@ export default function RecipientDashboardPage() {
   const claimableCount = streamRows.filter((row) => row.lifecycle.breakdown.claimable > 0).length;
   const waitingMilestoneCount = streamRows.filter((row) => row.lifecycle.status === "awaiting_milestone").length;
   const claimableRows = streamRows.filter((row) => row.lifecycle.breakdown.claimable > 0);
-  const milestoneRows = streamRows.filter((row) => row.lifecycle.status === "awaiting_milestone");
-  const upcomingRows = streamRows.filter((row) =>
-    row.lifecycle.breakdown.claimable <= 0
-    && row.lifecycle.status !== "awaiting_milestone"
-    && row.lifecycle.status !== "completed"
-    && row.lifecycle.status !== "cancelled"
-  );
   const claimableMintBreakdown = Array.from(
     claimableRows.reduce((map, row) => {
       const mintAddress = row.stream.mint.toBase58();
@@ -101,7 +93,7 @@ export default function RecipientDashboardPage() {
     : claimableMintBreakdown
       .slice(0, 2)
       .map((entry) => `${formatTokenAmount(entry.total, entry.decimals)} ${shortenAddress(entry.mintAddress, 4)}`)
-      .join(" • ");
+      .join(" / ");
 
   const getRecipientStateMessage = (nextEventLabel: string, status: string) => {
     if (status === "awaiting_milestone") return "Waiting for the creator to mark the milestone as completed.";
@@ -130,42 +122,6 @@ export default function RecipientDashboardPage() {
         <MetricCard label="Claimable Now" value={claimableCount} hint="Streams ready to withdraw" />
         <MetricCard label="Waiting Milestone" value={waitingMilestoneCount} hint="Needs creator confirmation" />
         <MetricCard label="Claimable Mints" value={claimableMintBreakdown.length} hint={claimableMintSummary} />
-      </div>
-
-      <div className="mb-8 grid gap-6 xl:grid-cols-3">
-        <ActionPanel
-          title="Claimable Now"
-          description="Streams where you can withdraw immediately."
-          emptyMessage="No recipient streams are claimable right now."
-          items={claimableRows.slice(0, 4).map(({ stream, lifecycle }) => ({
-            href: `/streams/${stream.publicKey.toBase58()}`,
-            title: `Claim from ${shortenAddress(stream.creator, 6)}`,
-            subtitle: lifecycle.nextEventLabel,
-            meta: "Withdraw now",
-          }))}
-        />
-        <ActionPanel
-          title="Waiting On Milestones"
-          description="Streams blocked until a creator marks a milestone complete."
-          emptyMessage="No incoming streams are blocked by milestones."
-          items={milestoneRows.slice(0, 4).map(({ stream, lifecycle }) => ({
-            href: `/streams/${stream.publicKey.toBase58()}`,
-            title: `Milestone stream from ${shortenAddress(stream.creator, 6)}`,
-            subtitle: getRecipientStateMessage(lifecycle.nextEventLabel, lifecycle.status),
-            meta: "Waiting",
-          }))}
-        />
-        <ActionPanel
-          title="Upcoming Unlocks"
-          description="Non-claimable streams with a clear next unlock event."
-          emptyMessage="No upcoming unlock events to track right now."
-          items={upcomingRows.slice(0, 4).map(({ stream, lifecycle }) => ({
-            href: `/streams/${stream.publicKey.toBase58()}`,
-            title: `Incoming stream from ${shortenAddress(stream.creator, 6)}`,
-            subtitle: getRecipientStateMessage(lifecycle.nextEventLabel, lifecycle.status),
-            meta: "Track",
-          }))}
-        />
       </div>
 
       <div className="flex flex-col gap-4">
@@ -213,27 +169,33 @@ export default function RecipientDashboardPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => withdraw(stream.publicKey, {
-                  mint: stream.mint,
-                  escrowTokenAccount: stream.escrowTokenAccount,
-                  escrowBump: stream.escrowBump,
-                })}
-                disabled={claimable <= 0 || (isPendingState && !isBusy)}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.97]"
-              >
-                {isLastSuccessful ? (
-                  <><CircleCheck size={16} /> Withdrawn</>
-                ) : isBusy ? (
-                  <><LoaderCircle size={16} className="animate-spin" /> {
-                    withdrawStatus === "preparing" ? "Preparing..." :
-                    withdrawStatus === "awaiting_signature" ? "Approve..." :
-                    "Confirming..."
-                  }</>
-                ) : (
-                  <>Withdraw {formatTokenAmount(claimable, decimals)}</>
-                )}
-              </button>
+              <div className="mt-5 border-t border-zinc-100 pt-5">
+                <div className="flex justify-center">
+                  <div className="inline-flex rounded-full bg-zinc-100 p-1 shadow-[inset_0_0_0_1px_rgba(24,24,27,0.05)]">
+                    <button
+                      onClick={() => withdraw(stream.publicKey, {
+                        mint: stream.mint,
+                        escrowTokenAccount: stream.escrowTokenAccount,
+                        escrowBump: stream.escrowBump,
+                      })}
+                      disabled={claimable <= 0 || (isPendingState && !isBusy)}
+                      className="flex min-w-44 cursor-pointer items-center justify-center gap-2 rounded-full bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-violet-300 disabled:text-white/80 active:scale-[0.97]"
+                    >
+                      {isLastSuccessful ? (
+                        <><CircleCheck size={16} /> Withdrawn</>
+                      ) : isBusy ? (
+                        <><LoaderCircle size={16} className="animate-spin" /> {
+                          withdrawStatus === "preparing" ? "Preparing..." :
+                          withdrawStatus === "awaiting_signature" ? "Approve..." :
+                          "Confirming..."
+                        }</>
+                      ) : (
+                        <>Withdraw {formatTokenAmount(claimable, decimals)}</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           );
         })}
