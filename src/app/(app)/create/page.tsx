@@ -17,6 +17,7 @@ import {
   Search,
   X,
 } from "lucide-react";
+import type { VestingType } from "@/lib/anchor/types";
 import {
   BASE_SOON_MINT,
   IDRX_SOON_MINT,
@@ -35,19 +36,50 @@ const BASE_LOGO_URL = "/base.png";
 const USDC_LOGO_URL = "/usdc.png";
 const IDRX_LOGO_URL = "/idrx.png";
 
+const vestingOptions: Array<{
+  type: VestingType;
+  title: string;
+  description: string;
+  detail: string;
+  accent: string;
+}> = [
+  {
+    type: "cliff",
+    title: "Cliff Vesting",
+    description: "All tokens unlock at a single date.",
+    detail: "Nothing before, everything after.",
+    accent: "text-amber-500",
+  },
+  {
+    type: "linear",
+    title: "Linear Vesting",
+    description: "Tokens release gradually from start date to end date.",
+    detail: "Smooth, proportional unlock.",
+    accent: "text-violet-500",
+  },
+  {
+    type: "milestone",
+    title: "Milestone Vesting",
+    description: "Full release after a time-gated milestone.",
+    detail: "Requires creator confirmation.",
+    accent: "text-blue-500",
+  },
+];
+
 export default function CreateStreamPage() {
   const { create, status, signature, error: txError, reset } = useCreateStream();
   const { tokens, isLoading: tokensLoading } = useAvailableTokens();
 
-  const [mode, setMode] = useState<"time-based" | "milestone-based">("time-based");
+  const [vestingType, setVestingType] = useState<VestingType>("linear");
   const [recipient, setRecipient] = useState("");
   const [mint, setMint] = useState(WRAPPED_SOL_MINT);
   const [manualToken, setManualToken] = useState<TokenOption | null>(null);
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [startDate, setStartDate] = useState("");
-  const [cliffDate, setCliffDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [unlockDate, setUnlockDate] = useState("");
+  const [milestoneDate, setMilestoneDate] = useState("");
   const [cancelable, setCancelable] = useState(true);
   const [validationError, setValidationError] = useState("");
   const selectedToken = useMemo(
@@ -81,15 +113,19 @@ export default function CreateStreamPage() {
         return `Insufficient ${selectedToken.symbol} balance`;
       }
     }
-    if (mode === "milestone-based") return null;
-    if (!startDate) return "Start date is required";
-    if (!endDate) return "End date is required";
-    const start = Math.floor(new Date(startDate).getTime() / 1000);
-    const end = Math.floor(new Date(endDate).getTime() / 1000);
-    const cliff = cliffDate ? Math.floor(new Date(cliffDate).getTime() / 1000) : start;
-    if (start >= end) return "Start date must be before end date";
-    if (cliff < start) return "Cliff date cannot be before start date";
-    if (cliff > end) return "Cliff date cannot be after end date";
+    if (vestingType === "cliff") {
+      if (!unlockDate) return "Unlock date is required";
+      return null;
+    }
+    if (vestingType === "linear") {
+      if (!startDate) return "Start date is required";
+      if (!endDate) return "End date is required";
+      const start = Math.floor(new Date(startDate).getTime() / 1000);
+      const end = Math.floor(new Date(endDate).getTime() / 1000);
+      if (start >= end) return "Start date must be before end date";
+      return null;
+    }
+    if (!milestoneDate) return "Milestone gate date is required";
     return null;
   };
 
@@ -100,11 +136,23 @@ export default function CreateStreamPage() {
     if (err) { setValidationError(err); return; }
 
     const now = Math.floor(Date.now() / 1000);
-    const start = mode === "time-based" ? Math.floor(new Date(startDate).getTime() / 1000) : now;
-    const cliff = mode === "time-based"
-      ? (cliffDate ? Math.floor(new Date(cliffDate).getTime() / 1000) : start)
-      : now;
-    const end = mode === "time-based" ? Math.floor(new Date(endDate).getTime() / 1000) : now + 1;
+    const unlock = unlockDate ? Math.floor(new Date(unlockDate).getTime() / 1000) : now + 1;
+    const milestone = milestoneDate ? Math.floor(new Date(milestoneDate).getTime() / 1000) : now + 1;
+    const start = vestingType === "linear"
+      ? Math.floor(new Date(startDate).getTime() / 1000)
+      : vestingType === "cliff"
+        ? Math.max(0, unlock - 1)
+        : now;
+    const cliff = vestingType === "linear"
+      ? start
+      : vestingType === "cliff"
+        ? unlock
+        : now;
+    const end = vestingType === "linear"
+      ? Math.floor(new Date(endDate).getTime() / 1000)
+      : vestingType === "cliff"
+        ? unlock
+        : now + 1;
 
     await create({
       recipient,
@@ -114,7 +162,8 @@ export default function CreateStreamPage() {
       cliffTime: cliff,
       endTime: end,
       cancelable,
-      milestoneBased: mode === "milestone-based",
+      vestingType,
+      milestoneTime: vestingType === "milestone" ? milestone : 0,
     });
   };
 
@@ -137,7 +186,7 @@ export default function CreateStreamPage() {
         </div>
         <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">Stream Created</h2>
         <p className="text-sm leading-relaxed text-zinc-500">
-          Your {mode === "milestone-based" ? "milestone-based" : "time-based"} vesting stream is now active on-chain.
+          Your {getVestingTypeLabel(vestingType).toLowerCase()} stream is now active on-chain.
         </p>
         {signature && (
           <a
@@ -165,32 +214,37 @@ export default function CreateStreamPage() {
 
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
         <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
-          <p className="text-sm font-semibold text-zinc-950">Stream Mode</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => setMode("time-based")}
-              className={`rounded-2xl border px-4 py-3 text-left transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
-                mode === "time-based"
-                  ? "border-violet-600 bg-violet-600 text-white"
-                  : "border-zinc-200 bg-white text-zinc-950 hover:border-zinc-300"
-              }`}
-            >
-              <p className="text-sm font-semibold">Time-based</p>
-              <p className={`mt-1 text-xs leading-relaxed ${mode === "time-based" ? "text-white/68" : "text-zinc-500"}`}>Unlocks by start, cliff, and end schedule.</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("milestone-based")}
-              className={`rounded-2xl border px-4 py-3 text-left transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
-                mode === "milestone-based"
-                  ? "border-violet-600 bg-violet-600 text-white"
-                  : "border-zinc-200 bg-white text-zinc-950 hover:border-zinc-300"
-              }`}
-            >
-              <p className="text-sm font-semibold">Milestone-based</p>
-              <p className={`mt-1 text-xs leading-relaxed ${mode === "milestone-based" ? "text-white/68" : "text-zinc-500"}`}>Unlocks only after the creator marks a milestone complete.</p>
-            </button>
+          <p className="text-sm font-semibold text-zinc-950">Vesting Type</p>
+          <div className="mt-4 grid gap-3 lg:grid-cols-3">
+            {vestingOptions.map((option) => {
+              const active = vestingType === option.type;
+
+              return (
+                <button
+                  key={option.type}
+                  type="button"
+                  onClick={() => {
+                    setVestingType(option.type);
+                    setValidationError("");
+                  }}
+                  className={`group relative min-h-44 cursor-pointer rounded-[24px] border p-5 text-left transition-all focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15 ${
+                    active
+                      ? "border-zinc-400 bg-zinc-100 text-zinc-950 shadow-[inset_0_0_0_1px_rgba(24,24,27,0.12)] ring-4 ring-zinc-200/70"
+                      : "border-zinc-200 bg-white text-zinc-950 hover:border-zinc-300 hover:bg-zinc-50"
+                  }`}
+                >
+                  {active ? (
+                    <span className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-zinc-950 text-white shadow-sm">
+                      <Check size={15} strokeWidth={2.6} />
+                    </span>
+                  ) : null}
+                  <VestingGlyph type={option.type} className={option.accent} />
+                  <p className="mt-6 text-base font-semibold">{option.title}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-zinc-500">{option.description}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-zinc-500">{option.detail}</p>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -269,7 +323,20 @@ export default function CreateStreamPage() {
           </div>
         </fieldset>
 
-        {mode === "time-based" ? (
+        {vestingType === "cliff" ? (
+          <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
+            <p className="text-sm font-semibold text-zinc-950">Vesting Schedule</p>
+            <div className="mt-7 flex max-w-xl flex-col gap-7">
+              <ScheduleDateTimeField
+                id="unlock"
+                label="Unlock Date"
+                value={unlockDate}
+                onDateChange={(date) => setUnlockDate(updateDatePart(unlockDate, date))}
+                onTimeChange={(time) => setUnlockDate(updateTimePart(unlockDate, time))}
+              />
+            </div>
+          </div>
+        ) : vestingType === "linear" ? (
           <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
             <p className="text-sm font-semibold text-zinc-950">Vesting Schedule</p>
             <div className="mt-7 flex max-w-xl flex-col gap-7">
@@ -287,22 +354,23 @@ export default function CreateStreamPage() {
                 onDateChange={(date) => setEndDate(updateDatePart(endDate, date))}
                 onTimeChange={(time) => setEndDate(updateTimePart(endDate, time))}
               />
-              <ScheduleDateTimeField
-                id="cliff"
-                label="Cliff Date"
-                value={cliffDate}
-                optionalLabel="Optional, defaults to start"
-                onDateChange={(date) => setCliffDate(date ? updateDatePart(cliffDate, date) : "")}
-                onTimeChange={(time) => setCliffDate(updateTimePart(cliffDate, time))}
-              />
             </div>
           </div>
         ) : (
-          <div className="rounded-[24px] border border-amber-100 bg-amber-50 px-4 py-4">
-            <p className="text-sm font-medium text-amber-900">Milestone unlock flow</p>
-            <p className="mt-1 text-sm leading-relaxed text-amber-800">
-              No schedule dates are needed. Tokens stay locked until you, as creator, mark the milestone as completed from the stream detail page.
+          <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
+            <p className="text-sm font-semibold text-zinc-950">Milestone Gate</p>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-500">
+              Tokens unlock only after this gate time has passed and the creator marks the milestone complete.
             </p>
+            <div className="mt-7 flex max-w-xl flex-col gap-7">
+              <ScheduleDateTimeField
+                id="milestone"
+                label="Gate Date"
+                value={milestoneDate}
+                onDateChange={(date) => setMilestoneDate(updateDatePart(milestoneDate, date))}
+                onTimeChange={(time) => setMilestoneDate(updateTimePart(milestoneDate, time))}
+              />
+            </div>
           </div>
         )}
 
@@ -320,15 +388,7 @@ export default function CreateStreamPage() {
 
         <div className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
           <p className="text-sm font-semibold text-zinc-950">Unlock Preview</p>
-          {mode === "time-based" ? (
-            <p className="mt-2 text-sm leading-relaxed text-zinc-500">
-              Tokens unlock over time from the start date, remain blocked until the cliff if one is set, then continue vesting linearly until the end date.
-            </p>
-          ) : (
-            <p className="mt-2 text-sm leading-relaxed text-zinc-500">
-              Tokens remain fully locked until the creator confirms milestone completion. After that, the recipient can withdraw the unlocked balance.
-            </p>
-          )}
+          <p className="mt-2 text-sm leading-relaxed text-zinc-500">{getVestingPreview(vestingType)}</p>
         </div>
 
         {displayError && (
@@ -350,7 +410,7 @@ export default function CreateStreamPage() {
               "Confirming..."
             }</>
           ) : (
-            <>Create {mode === "milestone-based" ? "Milestone" : "Time-based"} Stream <ArrowRight size={14} strokeWidth={2.5} /></>
+            <>Create {getVestingTypeLabel(vestingType)} Stream <ArrowRight size={14} strokeWidth={2.5} /></>
           )}
         </button>
       </form>
@@ -384,6 +444,47 @@ type ScheduleDateTimeFieldProps = {
   onDateChange: (date: string) => void;
   onTimeChange: (time: string) => void;
 };
+
+function getVestingTypeLabel(vestingType: VestingType) {
+  if (vestingType === "cliff") return "Cliff";
+  if (vestingType === "linear") return "Linear";
+
+  return "Milestone";
+}
+
+function getVestingPreview(vestingType: VestingType) {
+  if (vestingType === "cliff") {
+    return "Tokens remain fully locked until the unlock date. At that moment, the entire allocation becomes withdrawable.";
+  }
+
+  if (vestingType === "linear") {
+    return "Tokens unlock proportionally from the start date to the end date. The recipient can withdraw newly vested tokens over time.";
+  }
+
+  return "Tokens stay locked until the gate date passes and the creator confirms the milestone. Then the full allocation becomes withdrawable.";
+}
+
+function VestingGlyph({ type, className }: { type: VestingType; className: string }) {
+  const path = type === "cliff"
+    ? "M5 14h5V6h9"
+    : type === "linear"
+      ? "M5 15h4l6-9h4"
+      : "M4 15h5v-5h5V6h6";
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={`h-10 w-10 ${className}`}>
+      <path
+        d={path}
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2.2"
+      />
+      <circle cx="19" cy="6" r="1.6" fill="currentColor" />
+    </svg>
+  );
+}
 
 function ScheduleDateTimeField({
   id,

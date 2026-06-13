@@ -70,8 +70,9 @@ export function getVestedAmount(
     cliffTime,
     endTime,
     canceled: false,
-    milestoneBased: false,
+    vestingType: "linear",
     milestoneReached: false,
+    milestoneTime: 0,
   }, now);
 }
 
@@ -89,8 +90,9 @@ export function getClaimableAmount(
     cliffTime,
     endTime,
     canceled: false,
-    milestoneBased: false,
+    vestingType: "linear",
     milestoneReached: false,
+    milestoneTime: 0,
   });
 }
 
@@ -101,8 +103,9 @@ export function getStreamStatus(stream: {
   endTime: number;
   startTime?: number;
   cliffTime?: number;
-  milestoneBased?: boolean;
+  vestingType?: "cliff" | "linear" | "milestone";
   milestoneReached?: boolean;
+  milestoneTime?: number;
 }): "active" | "completed" | "cancelled" {
   const lifecycle = getStreamLifecycleStatus({
     totalAmount: stream.totalAmount,
@@ -111,8 +114,9 @@ export function getStreamStatus(stream: {
     cliffTime: stream.cliffTime ?? stream.startTime ?? 0,
     endTime: stream.endTime,
     canceled: stream.canceled,
-    milestoneBased: stream.milestoneBased ?? false,
+    vestingType: stream.vestingType ?? "linear",
     milestoneReached: stream.milestoneReached ?? false,
+    milestoneTime: stream.milestoneTime ?? 0,
   });
 
   if (lifecycle === "cancelled") return "cancelled";

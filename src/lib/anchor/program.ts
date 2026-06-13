@@ -4,7 +4,7 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddres
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { IDL } from "./idl";
 import { PROGRAM_ID_STRING } from "@/lib/env";
-import type { StreamAccount } from "./types";
+import type { StreamAccount, VestingType } from "./types";
 
 export const PROGRAM_ID = new PublicKey(PROGRAM_ID_STRING);
 
@@ -74,6 +74,16 @@ function createReader(data: Uint8Array) {
       offset += 1;
       return value;
     },
+    readVestingType(): VestingType {
+      const value = data[offset];
+      offset += 1;
+
+      if (value === 0) return "cliff";
+      if (value === 1) return "linear";
+      if (value === 2) return "milestone";
+
+      throw new Error(`Invalid vesting type: ${value}`);
+    },
   };
 }
 
@@ -94,16 +104,22 @@ export function decodeStreamAccount(publicKey: PublicKey, data: Uint8Array): Str
     endTime: reader.readI64(),
     cancelable: reader.readBool(),
     canceled: reader.readBool(),
-    milestoneBased: false,
+    vestingType: "linear" as VestingType,
     milestoneReached: false,
+    milestoneTime: 0,
     bump: 0,
     escrowBump: 0,
     createdAt: 0,
   };
 
   const remaining = data.length - reader.offset;
-  if (remaining >= 12) {
-    stream.milestoneBased = reader.readBool();
+  if (remaining >= 20) {
+    stream.vestingType = reader.readVestingType();
+    stream.milestoneReached = reader.readBool();
+    stream.milestoneTime = reader.readI64();
+  } else if (remaining >= 12) {
+    const legacyMilestoneBased = reader.readBool();
+    stream.vestingType = legacyMilestoneBased ? "milestone" : "linear";
     stream.milestoneReached = reader.readBool();
   }
 
@@ -127,7 +143,8 @@ export async function createStreamTx(
     cliffTime: BN;
     endTime: BN;
     cancelable: boolean;
-    milestoneBased: boolean;
+    vestingType: VestingType;
+    milestoneTime: BN;
   }
 ) {
   const [streamPDA] = getStreamPDA(creator, params.recipient, params.streamId);
@@ -144,7 +161,8 @@ export async function createStreamTx(
         params.cliffTime,
         params.endTime,
         params.cancelable,
-        params.milestoneBased
+        toAnchorVestingType(params.vestingType),
+        params.milestoneTime
       )
     .accounts({
       creator,
@@ -161,6 +179,13 @@ export async function createStreamTx(
     .transaction();
 
   return { tx, signers: [escrowTokenAccount] };
+}
+
+function toAnchorVestingType(vestingType: VestingType) {
+  if (vestingType === "cliff") return { cliff: {} };
+  if (vestingType === "linear") return { linear: {} };
+
+  return { milestone: {} };
 }
 
 export async function withdrawTx(

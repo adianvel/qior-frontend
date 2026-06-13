@@ -7,6 +7,7 @@ import { BN } from "@coral-xyz/anchor";
 import { getAccount, getAssociatedTokenAddressSync, getMint } from "@solana/spl-token";
 import { useQueryClient } from "@tanstack/react-query";
 import { getProgram, createStreamTx } from "@/lib/anchor/program";
+import type { VestingType } from "@/lib/anchor/types";
 import { toRawTokenAmount } from "@/lib/utils/format";
 import { getTransactionErrorMessage, type TxStatus } from "@/lib/utils/transactions";
 
@@ -18,7 +19,8 @@ export type CreateStreamParams = {
   cliffTime: number;
   endTime: number;
   cancelable: boolean;
-  milestoneBased: boolean;
+  vestingType: VestingType;
+  milestoneTime: number;
 };
 
 function withTimeout<T>(promise: Promise<T>, message: string, ms = 15_000): Promise<T> {
@@ -99,7 +101,8 @@ export function useCreateStream() {
         cliffTime: new BN(params.cliffTime),
         endTime: new BN(params.endTime),
         cancelable: params.cancelable,
-        milestoneBased: params.milestoneBased,
+        vestingType: params.vestingType,
+        milestoneTime: new BN(params.milestoneTime),
       });
 
       setStatus("awaiting_signature");

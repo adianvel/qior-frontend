@@ -86,7 +86,7 @@ export default function StreamDetailPage() {
   const withdrawSucceeded = withdrawStatus === "success" && activeStreamId === stream.publicKey.toBase58();
   const hasPrimaryActions = Boolean(
     isRecipient
-    || (isCreator && lifecycle.mode === "milestone-based" && !stream.milestoneReached && !stream.canceled)
+    || (isCreator && lifecycle.mode === "milestone" && !stream.milestoneReached && !stream.canceled)
     || (isCreator && stream.cancelable && lifecycle.status !== "cancelled" && !lifecycle.readyToClose)
     || (isCreator && lifecycle.readyToClose)
   );
@@ -103,7 +103,9 @@ export default function StreamDetailPage() {
 
   const getCreatorActionMessage = () => {
     if (lifecycle.readyToClose) return "This stream lifecycle is already settled.";
-    if (lifecycle.status === "awaiting_milestone") return "Creator follow-up is needed when the milestone is actually completed.";
+    if (lifecycle.status === "awaiting_milestone") return lifecycle.mode === "milestone"
+      ? "The creator can mark the milestone reached. Recipient withdrawal still waits for the milestone gate time."
+      : "Creator follow-up is needed when the milestone is actually completed.";
     if (stream.cancelable && lifecycle.status !== "cancelled") return "The creator can cancel this stream while it is still active.";
     if (!stream.cancelable) return "This stream was created as non-cancelable.";
 
@@ -206,7 +208,7 @@ export default function StreamDetailPage() {
           </div>
         </div>
 
-        {lifecycle.mode === "milestone-based" ? (
+        {lifecycle.mode === "milestone" ? (
           <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
             <p className="text-sm font-medium text-amber-800">
               {stream.milestoneReached ? "Milestone reached" : "Milestone pending"}
@@ -254,19 +256,49 @@ export default function StreamDetailPage() {
               </div>
             </div>
           ))}
-          <div className="mt-1 grid grid-cols-3 gap-4 border-t border-zinc-100 pt-3">
-            <div>
-              <p className="text-[11px] text-zinc-400">Start</p>
-              <p className="text-xs text-zinc-700">{formatDate(stream.startTime)}</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-zinc-400">Cliff</p>
-              <p className="text-xs text-zinc-700">{formatDate(stream.cliffTime)}</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-zinc-400">End</p>
-              <p className="text-xs text-zinc-700">{formatDate(stream.endTime)}</p>
-            </div>
+          <div className="mt-1 grid grid-cols-2 gap-4 border-t border-zinc-100 pt-3 sm:grid-cols-3">
+            {lifecycle.mode === "milestone" ? (
+              <>
+                <div>
+                  <p className="text-[11px] text-zinc-400">Gate</p>
+                  <p className="text-xs text-zinc-700">{formatDate(stream.milestoneTime)}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] text-zinc-400">Milestone</p>
+                  <p className="text-xs text-zinc-700">{stream.milestoneReached ? "Reached" : "Pending"}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] text-zinc-400">Release</p>
+                  <p className="text-xs text-zinc-700">Full amount</p>
+                </div>
+              </>
+            ) : lifecycle.mode === "cliff" ? (
+              <>
+                <div>
+                  <p className="text-[11px] text-zinc-400">Locked Until</p>
+                  <p className="text-xs text-zinc-700">{formatDate(stream.endTime)}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] text-zinc-400">Release</p>
+                  <p className="text-xs text-zinc-700">Full amount</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="text-[11px] text-zinc-400">Start</p>
+                  <p className="text-xs text-zinc-700">{formatDate(stream.startTime)}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] text-zinc-400">End</p>
+                  <p className="text-xs text-zinc-700">{formatDate(stream.endTime)}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] text-zinc-400">Release</p>
+                  <p className="text-xs text-zinc-700">Linear</p>
+                </div>
+              </>
+            )}
           </div>
           <div className="flex items-center justify-between gap-3 pt-2">
             <div className="flex items-center gap-2">
@@ -310,7 +342,7 @@ export default function StreamDetailPage() {
                 )}
               </button>
             ) : null}
-            {isCreator && lifecycle.mode === "milestone-based" && !stream.milestoneReached && !stream.canceled ? (
+            {isCreator && lifecycle.mode === "milestone" && !stream.milestoneReached && !stream.canceled ? (
               <button
                 onClick={() => setMilestone(stream.publicKey)}
                 disabled={milestoneStatus === "preparing" || milestoneStatus === "awaiting_signature" || milestoneStatus === "confirming"}
