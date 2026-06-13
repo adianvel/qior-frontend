@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { CirclePlus, House, Layers, LogOut, Wallet } from "lucide-react";
+import { CirclePlus, Layers, LockKeyhole, LogOut, Wallet } from "lucide-react";
 import { WalletButton } from "@/components/wallet/WalletButton";
 
 const navItems = [
@@ -80,12 +80,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         <main
           onScroll={(event) => setContentScrolled(event.currentTarget.scrollTop > 8)}
-          className="flex-1 overflow-y-auto p-4 pt-24 md:p-8 md:pt-28"
+          className="flex-1 overflow-y-auto p-4 pb-28 pt-24 md:p-8 md:pt-28"
         >
           {!connected ? (
             <div className="mx-auto flex min-h-[64vh] max-w-lg flex-col items-center justify-center gap-4 rounded-[32px] border border-zinc-200 bg-white p-8 text-center shadow-[0_24px_80px_rgba(24,24,27,0.08)]">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-600 text-white">
-                <House size={30} strokeWidth={1.7} />
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-600 text-white">
+                <div className="absolute left-4 top-4 h-5 w-5 rounded-full border-2 border-white/90" />
+                <div className="absolute bottom-4 right-4 h-5 w-5 rounded-full border-2 border-white/60" />
+                <div className="absolute left-7 top-7 h-px w-5 rotate-45 bg-white/70" />
+                <LockKeyhole size={24} strokeWidth={1.9} className="relative" />
               </div>
               <h2 className="text-2xl font-semibold tracking-tight text-zinc-950">Connect your wallet</h2>
               <p className="max-w-sm text-sm leading-relaxed text-zinc-500">
@@ -97,6 +100,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             children
           )}
         </main>
+
+        {connected ? (
+          <nav className="absolute inset-x-3 bottom-3 z-40 grid grid-cols-3 gap-1 rounded-[24px] border border-zinc-200/80 bg-white/88 p-1.5 shadow-[0_18px_60px_rgba(24,24,27,0.16)] backdrop-blur-2xl md:hidden">
+            {navItems.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-[18px] px-2 text-[11px] font-semibold transition-colors ${
+                    active
+                      ? "bg-zinc-950 text-white"
+                      : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950"
+                  }`}
+                >
+                  <item.icon size={17} strokeWidth={active ? 2.4 : 2} />
+                  <span className="max-w-full truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        ) : null}
       </div>
     </div>
   );

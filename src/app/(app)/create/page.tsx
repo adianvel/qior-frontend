@@ -55,6 +55,13 @@ export default function CreateStreamPage() {
     [manualToken, mint, tokens]
   );
 
+  useEffect(() => {
+    [SOLANA_LOGO_URL, BASE_LOGO_URL, USDC_LOGO_URL, IDRX_LOGO_URL].forEach((src) => {
+      const image = new window.Image();
+      image.src = src;
+    });
+  }, []);
+
   const handleSelectToken = (token: TokenOption) => {
     setMint(token.mint);
     setManualToken(token.source === "manual" ? token : null);
@@ -924,6 +931,7 @@ function TokenMark({ token, compact = false }: { token: TokenOption; compact?: b
           alt=""
           width={imageSize}
           height={imageSize}
+          loading="eager"
           className="h-full w-full object-cover"
         />
       </span>

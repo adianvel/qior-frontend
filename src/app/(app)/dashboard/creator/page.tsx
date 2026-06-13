@@ -190,17 +190,37 @@ export default function CreatorDashboardPage() {
             <Link
               key={stream.publicKey.toBase58()}
               href={`/streams/${stream.publicKey.toBase58()}`}
-              className="grid gap-3 border-b border-zinc-100 px-5 py-4 text-sm transition-colors hover:bg-zinc-50/80 md:grid-cols-[1.2fr_0.75fr_0.85fr_0.85fr_0.9fr_minmax(132px,0.8fr)] md:items-center"
+              className="grid gap-4 border-b border-zinc-100 px-5 py-4 text-sm transition-colors hover:bg-zinc-50/80 md:grid-cols-[1.2fr_0.75fr_0.85fr_0.85fr_0.9fr_minmax(132px,0.8fr)] md:items-center md:gap-3"
             >
-              <div>
-                <p className="font-mono text-xs font-semibold text-zinc-950">{shortenAddress(stream.recipient, 6)}</p>
-                <p className="mt-1 text-[11px] text-zinc-400">Claimed {formatTokenAmount(lifecycle.breakdown.claimed, decimals)}</p>
+              <div className="flex items-start justify-between gap-3 md:block">
+                <div>
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400 md:hidden">Recipient</p>
+                  <p className="font-mono text-xs font-semibold text-zinc-950">{shortenAddress(stream.recipient, 6)}</p>
+                  <p className="mt-1 text-[11px] text-zinc-400">Claimed {formatTokenAmount(lifecycle.breakdown.claimed, decimals)}</p>
+                </div>
+                <div className="md:hidden">
+                  <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
+                </div>
               </div>
-              <span className="text-xs font-medium text-zinc-500">{getModeLabel(lifecycle.mode)}</span>
-              <span className="font-mono text-xs text-zinc-600">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</span>
-              <span className="font-mono text-xs font-semibold text-zinc-950">{formatTokenAmount(lifecycle.breakdown.claimable, decimals)}</span>
-              <span className="text-xs text-zinc-500">{lifecycle.nextEventLabel}</span>
-              <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
+              <div>
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400 md:hidden">Mode</p>
+                <span className="text-xs font-medium text-zinc-500">{getModeLabel(lifecycle.mode)}</span>
+              </div>
+              <div>
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400 md:hidden">Vested</p>
+                <span className="font-mono text-xs text-zinc-600">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</span>
+              </div>
+              <div>
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400 md:hidden">Claimable</p>
+                <span className="font-mono text-xs font-semibold text-zinc-950">{formatTokenAmount(lifecycle.breakdown.claimable, decimals)}</span>
+              </div>
+              <div>
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-zinc-400 md:hidden">Next Event</p>
+                <span className="text-xs text-zinc-500">{lifecycle.nextEventLabel}</span>
+              </div>
+              <div className="hidden md:block">
+                <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
+              </div>
             </Link>
           );
         })}

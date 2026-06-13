@@ -1,13 +1,14 @@
 "use client";
 
-import { CircleAlert, CircleCheck, LoaderCircle, Wallet } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CircleAlert, CircleCheck, LoaderCircle, Wallet } from "lucide-react";
 import { AmountBreakdownBar } from "@/components/dashboard/AmountBreakdownBar";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { StreamStatusBadge } from "@/components/dashboard/StreamStatusBadge";
 import { useStreams } from "@/hooks/useStreams";
 import { useMintDecimals } from "@/hooks/useMintDecimals";
 import { useWithdraw } from "@/hooks/useWithdraw";
-import { formatTokenAmount, shortenAddress } from "@/lib/utils/format";
+import { formatTokenAmount, formatTokenAmountCompact, shortenAddress } from "@/lib/utils/format";
 import { deriveStreamLifecycle, getModeLabel } from "@/lib/utils/streamLifecycle";
 
 export default function RecipientDashboardPage() {
@@ -92,7 +93,7 @@ export default function RecipientDashboardPage() {
     ? "No claimable balances yet"
     : claimableMintBreakdown
       .slice(0, 2)
-      .map((entry) => `${formatTokenAmount(entry.total, entry.decimals)} ${shortenAddress(entry.mintAddress, 4)}`)
+      .map((entry) => `${formatTokenAmountCompact(entry.total, entry.decimals)} ${shortenAddress(entry.mintAddress, 4)}`)
       .join(" / ");
 
   const getRecipientStateMessage = (nextEventLabel: string, status: string) => {
@@ -107,9 +108,14 @@ export default function RecipientDashboardPage() {
 
   return (
     <div>
-      <div className="mb-8 rounded-[32px] border border-zinc-200 bg-white p-5 shadow-[0_18px_70px_rgba(24,24,27,0.055)]">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Incoming Streams</h1>
-        <p className="mt-2 text-sm leading-relaxed text-zinc-500">Tokens being vested to your wallet.</p>
+      <div className="mb-5 flex flex-col gap-3 rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)] md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-zinc-950">Incoming Streams</h1>
+          <p className="mt-1 text-xs leading-relaxed text-zinc-500">Sorted by claimable balance first, then the next unlock.</p>
+        </div>
+        <p className="w-fit rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-500">
+          {streams.length} allocation{streams.length === 1 ? "" : "s"}
+        </p>
       </div>
       {withdrawError && (
         <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -134,7 +140,7 @@ export default function RecipientDashboardPage() {
 
           return (
             <div key={stream.publicKey.toBase58()} className="rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
-              <div className="flex items-start justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">From</p>
                   <p className="mt-1 font-mono text-sm font-semibold text-zinc-950">{shortenAddress(stream.creator, 6)}</p>
@@ -143,7 +149,15 @@ export default function RecipientDashboardPage() {
                     <span className="text-xs text-zinc-400">{lifecycle.nextEventLabel}</span>
                   </div>
                 </div>
-                <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
+                <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+                  <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
+                  <Link
+                    href={`/streams/${stream.publicKey.toBase58()}`}
+                    className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-950"
+                  >
+                    Detail <ArrowRight size={12} strokeWidth={2.5} />
+                  </Link>
+                </div>
               </div>
 
               <p className="mt-3 text-sm leading-relaxed text-zinc-500">
@@ -154,22 +168,22 @@ export default function RecipientDashboardPage() {
                 <AmountBreakdownBar breakdown={lifecycle.breakdown} compact />
               </div>
 
-              <div className="mt-4 grid grid-cols-3 gap-4 border-t border-zinc-100 pt-4">
+              <div className="mt-4 grid grid-cols-1 gap-3 border-t border-zinc-200 pt-4 sm:grid-cols-3 sm:divide-x sm:divide-zinc-200 sm:gap-0">
                 <div>
                   <p className="text-[11px] font-medium text-zinc-400">Total</p>
                   <p className="font-mono text-sm font-semibold text-zinc-950">{formatTokenAmount(stream.totalAmount, decimals)}</p>
                 </div>
-                <div>
+                <div className="sm:px-4">
                   <p className="text-[11px] font-medium text-zinc-400">Vested</p>
                   <p className="font-mono text-sm font-semibold text-zinc-950">{formatTokenAmount(lifecycle.breakdown.vested, decimals)}</p>
                 </div>
-                <div>
+                <div className="sm:pl-4">
                   <p className="text-[11px] font-medium text-zinc-400">Claimable</p>
-                  <p className="font-mono text-sm font-semibold text-violet-600">{formatTokenAmount(claimable, decimals)}</p>
+                  <p className="font-mono text-sm font-semibold text-violet-600">{formatTokenAmountCompact(claimable, decimals)}</p>
                 </div>
               </div>
 
-              <div className="mt-5 border-t border-zinc-100 pt-5">
+              <div className="mt-5 border-t border-zinc-300 pt-5">
                 <div className="flex justify-center">
                   <div className="inline-flex rounded-full bg-zinc-100 p-1 shadow-[inset_0_0_0_1px_rgba(24,24,27,0.05)]">
                     <button
@@ -178,7 +192,7 @@ export default function RecipientDashboardPage() {
                         escrowTokenAccount: stream.escrowTokenAccount,
                         escrowBump: stream.escrowBump,
                       })}
-                      disabled={claimable <= 0 || (isPendingState && !isBusy)}
+                      disabled={claimable <= 0 || isPendingState}
                       className="flex min-w-44 cursor-pointer items-center justify-center gap-2 rounded-full bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:bg-violet-300 disabled:text-white/80 active:scale-[0.97]"
                     >
                       {isLastSuccessful ? (
@@ -190,7 +204,7 @@ export default function RecipientDashboardPage() {
                           "Confirming..."
                         }</>
                       ) : (
-                        <>Withdraw {formatTokenAmount(claimable, decimals)}</>
+                        <>Withdraw {formatTokenAmountCompact(claimable, decimals)}</>
                       )}
                     </button>
                   </div>

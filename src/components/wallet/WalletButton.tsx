@@ -30,7 +30,7 @@ export function WalletButton({ compact = false }: { compact?: boolean }) {
         <button
           type="button"
           onClick={() => setMenuOpen((open) => !open)}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-4 text-sm font-semibold text-violet-700 transition-all hover:border-violet-300 hover:bg-violet-100 active:scale-[0.98]"
+          className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-4 text-sm font-semibold text-violet-700 transition-all hover:border-violet-300 hover:bg-violet-100 active:scale-[0.98]"
         >
           {wallet?.adapter.icon ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -50,7 +50,7 @@ export function WalletButton({ compact = false }: { compact?: boolean }) {
                 setMenuOpen(false);
                 setVisible(true);
               }}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition-colors hover:bg-violet-50 hover:text-violet-700"
+              className="flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-zinc-700 transition-colors hover:bg-violet-50 hover:text-violet-700"
             >
               <RefreshCw size={15} />
               Change wallet
@@ -61,7 +61,7 @@ export function WalletButton({ compact = false }: { compact?: boolean }) {
                 setMenuOpen(false);
                 disconnect();
               }}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+              className="flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
             >
               <LogOut size={15} />
               Disconnect
@@ -77,7 +77,7 @@ export function WalletButton({ compact = false }: { compact?: boolean }) {
       type="button"
       onClick={() => setVisible(true)}
       disabled={connecting}
-      className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-70 active:scale-[0.98]"
+      className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-70 active:scale-[0.98]"
     >
       {connecting ? <LoaderCircle size={16} className="animate-spin" /> : <Wallet size={16} />}
       <span>{connecting ? "Connecting..." : "Connect Wallet"}</span>

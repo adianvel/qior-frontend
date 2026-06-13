@@ -17,6 +17,12 @@ export function formatTokenAmount(amount: number, decimals: number): string {
   });
 }
 
+export function formatTokenAmountCompact(amount: number, decimals: number, maxFractionDigits = 4): string {
+  return (amount / Math.pow(10, decimals)).toLocaleString(undefined, {
+    maximumFractionDigits: Math.min(decimals, maxFractionDigits),
+  });
+}
+
 export function formatDate(timestamp: number): string {
   return new Date(timestamp * 1000).toLocaleDateString(undefined, {
     year: "numeric",
