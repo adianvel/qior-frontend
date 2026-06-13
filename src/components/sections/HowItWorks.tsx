@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 const steps = [
@@ -76,37 +77,47 @@ function StepGlyph({ index }: { index: number }) {
 }
 
 export function HowItWorks() {
+  const [hoveredStep, setHoveredStep] = useState<number | null>(null);
+
   return (
     <section id="how-it-works" className="relative bg-white px-4 py-6 md:flex md:min-h-screen md:px-8 md:py-8">
       <div className="mx-auto flex w-full max-w-[1500px] flex-col md:flex-1 md:justify-center">
-        <motion.h2
-          initial={false}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-8 text-[clamp(34px,9.2vw,56px)] font-medium leading-[0.96] tracking-normal text-zinc-900 sm:whitespace-nowrap md:mb-10 md:text-[clamp(48px,7vw,120px)]"
-        >
-          What we do.
-        </motion.h2>
+        <div className="mx-auto w-full max-w-[1320px]">
+          <motion.h2
+            initial={false}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-8 text-[clamp(34px,9.2vw,56px)] font-medium leading-[0.96] tracking-normal text-zinc-900 sm:whitespace-nowrap md:mb-10 md:text-[clamp(48px,7vw,120px)]"
+          >
+            What we do.
+          </motion.h2>
+        </div>
 
-        <div className="grid overflow-hidden md:grid-cols-3">
+        <div className="mx-auto flex w-full max-w-[1320px] flex-col overflow-hidden md:h-[460px] md:flex-row">
           {steps.map((step, i) => (
             <motion.article
               key={step.num}
               initial={false}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.25 }}
-              transition={{ duration: 0.5, delay: 0.12 + i * 0.08 }}
-              className={`relative flex min-h-[380px] flex-col justify-between p-8 md:min-h-[460px] md:p-8 ${step.theme}`}
+              animate={{ flexBasis: hoveredStep === null ? "33.333%" : hoveredStep === i ? "40%" : "30%" }}
+              transition={{ duration: 0.42, delay: hoveredStep === null ? 0.12 + i * 0.08 : 0, ease: [0.22, 1, 0.36, 1] }}
+              onMouseEnter={() => setHoveredStep(i)}
+              onMouseLeave={() => setHoveredStep(null)}
+              onFocus={() => setHoveredStep(i)}
+              onBlur={() => setHoveredStep(null)}
+              className={`group relative flex min-h-[380px] cursor-pointer flex-col justify-between p-8 transition-[filter] duration-300 focus-within:z-10 hover:z-10 hover:saturate-[1.06] md:min-h-0 md:p-8 ${step.theme}`}
+              tabIndex={0}
             >
               <div className="flex items-start justify-between gap-8">
-                <div className="opacity-95">
+                <div className="opacity-95 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105">
                   <StepGlyph index={i} />
                 </div>
                 <span className="font-mono text-base tracking-[0.12em] opacity-90">{step.num}</span>
               </div>
 
-              <div className="max-w-[28ch]">
+              <div className="max-w-[28ch] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-2">
                 <h3 className="text-[clamp(32px,3vw,48px)] font-medium leading-none tracking-normal">
                   {step.title}
                 </h3>

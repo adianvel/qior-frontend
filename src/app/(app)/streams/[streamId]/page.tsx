@@ -21,6 +21,7 @@ import {
   explorerAccountUrl,
   formatDate,
   formatTokenAmount,
+  formatTokenAmountCompact,
 } from "@/lib/utils/format";
 import { deriveStreamLifecycle, getModeLabel } from "@/lib/utils/streamLifecycle";
 
@@ -81,7 +82,14 @@ export default function StreamDetailPage() {
   const isCreator = publicKey?.equals(stream.creator);
   const isRecipient = publicKey?.equals(stream.recipient);
   const withdrawBusy = isProcessingStream(stream.publicKey);
+  const withdrawPending = withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming";
   const withdrawSucceeded = withdrawStatus === "success" && activeStreamId === stream.publicKey.toBase58();
+  const hasPrimaryActions = Boolean(
+    isRecipient
+    || (isCreator && lifecycle.mode === "milestone-based" && !stream.milestoneReached && !stream.canceled)
+    || (isCreator && stream.cancelable && lifecycle.status !== "cancelled" && !lifecycle.readyToClose)
+    || (isCreator && lifecycle.readyToClose)
+  );
 
   const getRecipientActionMessage = () => {
     if (lifecycle.breakdown.claimable > 0) return "You can withdraw unlocked tokens from this stream now.";
@@ -126,10 +134,10 @@ export default function StreamDetailPage() {
         <ArrowLeft size={14} /> Back to streams
       </Link>
 
-      <div className="mb-6 flex items-center justify-between rounded-[32px] border border-zinc-200 bg-white p-5 shadow-[0_18px_70px_rgba(24,24,27,0.055)]">
+      <div className="mb-6 flex flex-col gap-4 rounded-[28px] border border-zinc-200 bg-white p-5 shadow-[0_18px_60px_rgba(24,24,27,0.045)] sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-600">Stream account</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Stream Detail</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-950 sm:text-3xl">Stream Detail</h1>
         </div>
         <StreamStatusBadge status={lifecycle.status} readyToClose={lifecycle.readyToClose} />
       </div>
@@ -161,7 +169,7 @@ export default function StreamDetailPage() {
           <span className="font-mono font-semibold text-zinc-950">{lifecycle.breakdown.vestingProgressPct}% vested</span>
         </div>
         <AmountBreakdownBar breakdown={lifecycle.breakdown} />
-        <div className="mt-4 grid grid-cols-4 gap-4 border-t border-zinc-100 pt-4">
+        <div className="mt-4 grid grid-cols-2 gap-4 border-t border-zinc-100 pt-4 sm:grid-cols-4">
           <div>
             <p className="text-[11px] font-medium text-zinc-400">Total</p>
             <p className="font-mono text-sm font-semibold text-zinc-950">{formatTokenAmount(stream.totalAmount, decimals)}</p>
@@ -176,7 +184,7 @@ export default function StreamDetailPage() {
           </div>
           <div>
             <p className="text-[11px] font-medium text-zinc-400">Claimable</p>
-            <p className="font-mono text-sm font-semibold text-violet-600">{formatTokenAmount(claimable, decimals)}</p>
+            <p className="font-mono text-sm font-semibold text-violet-600">{formatTokenAmountCompact(claimable, decimals)}</p>
           </div>
         </div>
       </div>
@@ -274,66 +282,70 @@ export default function StreamDetailPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        {isRecipient ? (
-          <button
-            onClick={() => withdraw(stream.publicKey, {
-              mint: stream.mint,
-              escrowTokenAccount: stream.escrowTokenAccount,
-              escrowBump: stream.escrowBump,
-            })}
-            disabled={claimable <= 0 || !isRecipient || (withdrawStatus !== "idle" && !withdrawBusy)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:opacity-60 active:scale-[0.97]"
-          >
-            {withdrawBusy ? (
-              <><LoaderCircle size={14} className="animate-spin" /> {
-                withdrawStatus === "preparing" ? "Preparing..." :
-                withdrawStatus === "awaiting_signature" ? "Approve..." :
-                "Confirming..."
-              }</>
-            ) : withdrawSucceeded ? (
-              "Withdrawn"
-            ) : claimable > 0 ? (
-              <>Withdraw {formatTokenAmount(claimable, decimals)}</>
-            ) : (
-              "No tokens claimable yet"
+      {hasPrimaryActions ? (
+        <div className="rounded-[28px] border border-zinc-200 bg-white p-4 shadow-[0_18px_60px_rgba(24,24,27,0.045)]">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            {isRecipient ? (
+              <button
+                onClick={() => withdraw(stream.publicKey, {
+                  mint: stream.mint,
+                  escrowTokenAccount: stream.escrowTokenAccount,
+                  escrowBump: stream.escrowBump,
+                })}
+                disabled={claimable <= 0 || !isRecipient || withdrawPending}
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.97]"
+              >
+                {withdrawBusy ? (
+                  <><LoaderCircle size={14} className="animate-spin" /> {
+                    withdrawStatus === "preparing" ? "Preparing..." :
+                    withdrawStatus === "awaiting_signature" ? "Approve..." :
+                    "Confirming..."
+                  }</>
+                ) : withdrawSucceeded ? (
+                  "Withdrawn"
+                ) : claimable > 0 ? (
+                  <>Withdraw {formatTokenAmountCompact(claimable, decimals)}</>
+                ) : (
+                  "No tokens claimable yet"
+                )}
+              </button>
+            ) : null}
+            {isCreator && lifecycle.mode === "milestone-based" && !stream.milestoneReached && !stream.canceled ? (
+              <button
+                onClick={() => setMilestone(stream.publicKey)}
+                disabled={milestoneStatus === "preparing" || milestoneStatus === "awaiting_signature" || milestoneStatus === "confirming"}
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-semibold text-violet-700 transition-all hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.97]"
+              >
+                {milestoneStatus === "preparing" || milestoneStatus === "awaiting_signature" || milestoneStatus === "confirming" ? (
+                  <><LoaderCircle size={14} className="animate-spin" /> {
+                    milestoneStatus === "preparing" ? "Preparing..." :
+                    milestoneStatus === "awaiting_signature" ? "Approve..." :
+                    "Confirming..."
+                  }</>
+                ) : (
+                  "Mark Milestone Reached"
+                )}
+              </button>
+            ) : null}
+            {isCreator && stream.cancelable && lifecycle.status !== "cancelled" && !lifecycle.readyToClose && (
+              <button
+                onClick={() => setShowCancelModal(true)}
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 active:scale-[0.97]"
+              >
+                Cancel Stream
+              </button>
             )}
-          </button>
-        ) : null}
-        {isCreator && lifecycle.mode === "milestone-based" && !stream.milestoneReached && !stream.canceled ? (
-          <button
-            onClick={() => setMilestone(stream.publicKey)}
-            disabled={milestoneStatus === "preparing" || milestoneStatus === "awaiting_signature" || milestoneStatus === "confirming"}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm font-semibold text-violet-700 transition-all hover:bg-violet-50 disabled:opacity-60 active:scale-[0.97]"
-          >
-            {milestoneStatus === "preparing" || milestoneStatus === "awaiting_signature" || milestoneStatus === "confirming" ? (
-              <><LoaderCircle size={14} className="animate-spin" /> {
-                milestoneStatus === "preparing" ? "Preparing..." :
-                milestoneStatus === "awaiting_signature" ? "Approve..." :
-                "Confirming..."
-              }</>
-            ) : (
-              "Mark Milestone Reached"
-            )}
-          </button>
-        ) : null}
-        {isCreator && stream.cancelable && lifecycle.status !== "cancelled" && !lifecycle.readyToClose && (
-          <button
-            onClick={() => setShowCancelModal(true)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 active:scale-[0.97]"
-          >
-            Cancel Stream
-          </button>
-        )}
-        {isCreator && lifecycle.readyToClose ? (
-          <button
-            onClick={() => setShowCloseModal(true)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-50 active:scale-[0.97]"
-          >
-            Close Stream
-          </button>
-        ) : null}
-      </div>
+            {isCreator && lifecycle.readyToClose ? (
+              <button
+                onClick={() => setShowCloseModal(true)}
+                className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-50 active:scale-[0.97]"
+              >
+                Close Stream
+              </button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       {showCancelModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
