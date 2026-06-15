@@ -5,7 +5,7 @@ export type TdpSolana = {
     name: string;
     discriminator: number[];
     accounts: Array<{ name: string; writable?: boolean; signer?: boolean }>;
-    args: Array<{ name: string; type: string }>;
+    args: Array<{ name: string; type: string | { defined: { name: string } } }>;
   }>;
   accounts: [
     {
@@ -31,11 +31,23 @@ export type TdpSolana = {
           { name: "endTime"; type: "i64" },
           { name: "cancelable"; type: "bool" },
           { name: "canceled"; type: "bool" },
-          { name: "milestoneBased"; type: "bool" },
+          { name: "vestingType"; type: { defined: { name: "VestingType" } } },
           { name: "milestoneReached"; type: "bool" },
+          { name: "milestoneTime"; type: "i64" },
           { name: "bump"; type: "u8" },
           { name: "escrowBump"; type: "u8" },
           { name: "createdAt"; type: "i64" }
+        ];
+      };
+    },
+    {
+      name: "VestingType";
+      type: {
+        kind: "enum";
+        variants: [
+          { name: "Cliff" },
+          { name: "Linear" },
+          { name: "Milestone" }
         ];
       };
     }
@@ -68,7 +80,8 @@ export const IDL: TdpSolana = {
         { name: "cliffTime", type: "i64" },
         { name: "endTime", type: "i64" },
         { name: "cancelable", type: "bool" },
-        { name: "milestoneBased", type: "bool" },
+        { name: "vestingType", type: { defined: { name: "VestingType" } } },
+        { name: "milestoneTime", type: "i64" },
       ],
     },
     {
@@ -152,11 +165,23 @@ export const IDL: TdpSolana = {
           { name: "endTime", type: "i64" },
           { name: "cancelable", type: "bool" },
           { name: "canceled", type: "bool" },
-          { name: "milestoneBased", type: "bool" },
+          { name: "vestingType", type: { defined: { name: "VestingType" } } },
           { name: "milestoneReached", type: "bool" },
+          { name: "milestoneTime", type: "i64" },
           { name: "bump", type: "u8" },
           { name: "escrowBump", type: "u8" },
           { name: "createdAt", type: "i64" },
+        ],
+      },
+    },
+    {
+      name: "VestingType",
+      type: {
+        kind: "enum",
+        variants: [
+          { name: "Cliff" },
+          { name: "Linear" },
+          { name: "Milestone" },
         ],
       },
     },

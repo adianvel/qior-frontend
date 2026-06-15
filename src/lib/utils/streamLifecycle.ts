@@ -1,6 +1,6 @@
 import type { StreamAccount } from "@/lib/anchor/types";
 
-export type StreamMode = "time-based" | "milestone-based";
+export type StreamMode = "cliff" | "linear" | "milestone";
 
 export type StreamLifecycleStatus =
   | "scheduled"
@@ -51,8 +51,9 @@ type LifecycleStream = Pick<
   | "cliffTime"
   | "endTime"
   | "canceled"
-  | "milestoneBased"
+  | "vestingType"
   | "milestoneReached"
+  | "milestoneTime"
 >;
 
 function clampPercentage(value: number): number {
@@ -76,12 +77,15 @@ function formatRelativeTimestamp(targetTime: number, now: number): string {
   return "in <1m";
 }
 
-export function getStreamMode(stream: Pick<LifecycleStream, "milestoneBased">): StreamMode {
-  return stream.milestoneBased ? "milestone-based" : "time-based";
+export function getStreamMode(stream: Pick<LifecycleStream, "vestingType">): StreamMode {
+  return stream.vestingType;
 }
 
 export function getModeLabel(mode: StreamMode): string {
-  return mode === "milestone-based" ? "Milestone" : "Time-based";
+  if (mode === "cliff") return "Cliff";
+  if (mode === "linear") return "Linear";
+
+  return "Milestone";
 }
 
 export function getVestedAmountAtTime(
@@ -99,8 +103,12 @@ export function getVestedAmountAtTime(
 }
 
 export function getStreamVestedAmount(stream: LifecycleStream, now = Math.floor(Date.now() / 1000)): number {
-  if (stream.milestoneBased) {
-    return stream.milestoneReached ? stream.totalAmount : 0;
+  if (stream.vestingType === "cliff") {
+    return now >= stream.endTime ? stream.totalAmount : 0;
+  }
+
+  if (stream.vestingType === "milestone") {
+    return stream.milestoneReached && now >= stream.milestoneTime ? stream.totalAmount : 0;
   }
 
   return getVestedAmountAtTime(
@@ -151,8 +159,8 @@ export function getStreamLifecycleStatus(
   if (stream.canceled) return "cancelled";
   if (stream.withdrawnAmount >= stream.totalAmount) return "completed";
 
-  if (stream.milestoneBased) {
-    if (!stream.milestoneReached) return "awaiting_milestone";
+  if (stream.vestingType === "milestone") {
+    if (!stream.milestoneReached || now < stream.milestoneTime) return "awaiting_milestone";
 
     return getStreamClaimableAmount(stream, now) > 0 ? "milestone_ready" : "completed";
   }
@@ -172,8 +180,20 @@ export function getStreamNextEventLabel(stream: LifecycleStream, now = Math.floo
   if (stream.canceled) return isStreamReadyToClose(stream) ? "Ready to close" : "Cancelled";
   if (stream.withdrawnAmount >= stream.totalAmount) return "Ready to close";
 
-  if (stream.milestoneBased) {
-    return stream.milestoneReached ? "Available now" : "Waiting for milestone";
+  if (stream.vestingType === "milestone") {
+    if (!stream.milestoneReached) {
+      return now < stream.milestoneTime
+        ? `Milestone gate ${formatRelativeTimestamp(stream.milestoneTime, now)}`
+        : "Waiting for milestone";
+    }
+
+    return now >= stream.milestoneTime
+      ? "Available now"
+      : `Milestone gate ${formatRelativeTimestamp(stream.milestoneTime, now)}`;
+  }
+
+  if (stream.vestingType === "cliff") {
+    return now < stream.endTime ? `Unlocks ${formatRelativeTimestamp(stream.endTime, now)}` : "Available now";
   }
 
   if (now < stream.startTime) return `Starts ${formatRelativeTimestamp(stream.startTime, now)}`;
@@ -191,7 +211,12 @@ export function getStreamNextUnlockTimestamp(
   now = Math.floor(Date.now() / 1000)
 ): number | null {
   if (stream.canceled || stream.withdrawnAmount >= stream.totalAmount) return null;
-  if (stream.milestoneBased) return stream.milestoneReached ? now : null;
+  if (stream.vestingType === "milestone") {
+    if (!stream.milestoneReached) return stream.milestoneTime > now ? stream.milestoneTime : null;
+
+    return stream.milestoneTime > now ? stream.milestoneTime : now;
+  }
+  if (stream.vestingType === "cliff") return now < stream.endTime ? stream.endTime : null;
   if (now < stream.startTime) return stream.startTime;
   if (now < stream.cliffTime) return stream.cliffTime;
   if (now < stream.endTime) return stream.endTime;

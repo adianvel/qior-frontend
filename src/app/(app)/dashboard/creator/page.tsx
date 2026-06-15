@@ -30,8 +30,9 @@ const statusFilters: Array<{ value: StreamFilterStatus; label: string }> = [
 
 const modeFilters: Array<{ value: "all" | StreamMode; label: string }> = [
   { value: "all", label: "All modes" },
-  { value: "time-based", label: "Time-based" },
-  { value: "milestone-based", label: "Milestone" },
+  { value: "cliff", label: "Cliff" },
+  { value: "linear", label: "Linear" },
+  { value: "milestone", label: "Milestone" },
 ];
 
 const STREAMS_PER_PAGE = 10;

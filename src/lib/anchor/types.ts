@@ -1,5 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 
+export type VestingType = "cliff" | "linear" | "milestone";
+
 export interface StreamAccount {
   publicKey: PublicKey;
   creator: PublicKey;
@@ -14,8 +16,9 @@ export interface StreamAccount {
   endTime: number;
   cancelable: boolean;
   canceled: boolean;
-  milestoneBased: boolean;
+  vestingType: VestingType;
   milestoneReached: boolean;
+  milestoneTime: number;
   bump: number;
   escrowBump: number;
   createdAt: number;
