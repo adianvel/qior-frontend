@@ -1,25 +1,36 @@
 # Qior Frontend
 
-Frontend for **Qior**, a Solana token distribution and vesting protocol. Qior lets creators lock SPL tokens in escrow and release them to recipients through transparent vesting schedules on Solana devnet.
+Frontend for **Qior**, a Solana token vesting and distribution platform. Qior lets creators lock SPL tokens in escrow and release them to recipients through cliff, linear, or milestone-based vesting schedules on Solana devnet.
+
+## Documentation
+
+Developer documentation is available in the app at:
+
+```txt
+/docs
+```
+
+The landing page `Explore Qior` button opens this public docs page. It covers frontend setup, wallet and token requirements, Anchor client integration, program calls used by the frontend, vesting type parameters, and frontend architecture decisions.
 
 ## Tech Stack
 
 - Next.js 16 with App Router and TypeScript
 - Tailwind CSS v4
 - Framer Motion
-- Phosphor Icons
+- lucide-react
 - Solana Wallet Adapter
 - Anchor client
 - TanStack Query
 
 ## Features
 
-- Landing page with 8 product sections
+- Public marketing landing page
+- Public developer documentation page
 - Wallet-gated app shell
 - Creator dashboard for created vesting streams
 - Recipient dashboard for incoming streams and withdrawals
-- Create-stream form wired to the on-chain program
-- Stream detail page with on-chain account loading and cancel action
+- Create stream flow for Cliff, Linear, and Milestone vesting
+- Stream detail page with withdraw, cancel, milestone, and close actions
 - Phantom and Solflare wallet support
 
 ## Routes
@@ -27,6 +38,7 @@ Frontend for **Qior**, a Solana token distribution and vesting protocol. Qior le
 | Route | Purpose |
 | --- | --- |
 | `/` | Marketing landing page |
+| `/docs` | Developer documentation and frontend integration guide |
 | `/dashboard/creator` | Streams created by the connected wallet |
 | `/dashboard/recipient` | Streams where the connected wallet is recipient |
 | `/create` | Create a new token vesting stream |
@@ -34,15 +46,17 @@ Frontend for **Qior**, a Solana token distribution and vesting protocol. Qior le
 
 ## Environment
 
-The app requires public environment variables. Create `.env.local` for local development and set the same variables in Vercel:
+Create `.env.local` for local development and set the same variables in Vercel:
 
 ```bash
 NEXT_PUBLIC_SOLANA_CLUSTER=devnet
-NEXT_PUBLIC_PROGRAM_ID=BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9
-NEXT_PUBLIC_RPC_URL=<your-devnet-rpc-url>
+NEXT_PUBLIC_PROGRAM_ID=YOUR_PROGRAM_ID
+NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 ```
 
-Use a dedicated RPC provider for better reliability. The frontend does not provide fallback values for these variables.
+Use a Helius devnet RPC endpoint from [helius.dev](https://www.helius.dev/) for better reliability. The frontend does not provide fallback values for these variables.
+
+For the current Qior devnet deployment, use `BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9` as `NEXT_PUBLIC_PROGRAM_ID`.
 
 ## Getting Started
 
@@ -52,6 +66,12 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+To test the full create and withdraw flow, use a devnet wallet with:
+
+- Devnet SOL for fees.
+- USDC-Dev from the [SPL Token Faucet](https://spl-token-faucet.com/?token-name=USDC-Dev), or another SPL token balance for the selected mint.
+- A recipient wallet address.
 
 ## Quality Checks
 
@@ -64,8 +84,8 @@ Current status:
 
 - Lint passes.
 - Production build passes.
-- Devnet program is deployed at `BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9`.
-- End-to-end create, withdraw, and cancel testing requires an interactive devnet wallet with SOL and SPL token balance.
+- Devnet program ID: `BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9`.
+- End-to-end create, withdraw, cancel, milestone, and close testing requires an interactive devnet wallet.
 
 ## Related
 

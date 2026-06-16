@@ -61,12 +61,12 @@ export function Hero() {
             Launch App
           </Link>
 
-          <a
-            href="#features"
+          <Link
+            href="/docs"
             className="rounded-full bg-indigo-500/15 px-7 py-4 text-black backdrop-blur-xl transition-all hover:bg-indigo-500/20 active:scale-[0.97]"
           >
             Explore Qior
-          </a>
+          </Link>
         </div>
 
         <div className="mt-36 w-full max-w-6xl">
