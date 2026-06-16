@@ -130,3 +130,94 @@ body {
 .wallet-adapter-modal-button-close svg {
   fill: #71717a !important;
 }
+
+.qior-docs-page {
+  color-scheme: light;
+}
+
+.qior-docs-page * {
+  scrollbar-color: #a1a1aa transparent;
+}
+
+.qior-docs-dark {
+  color-scheme: dark;
+  background: #0c0c0f !important;
+  color: #f4f4f5 !important;
+}
+
+.qior-docs-dark aside,
+.qior-docs-dark header {
+  border-color: #27272a !important;
+  background: rgba(12, 12, 15, 0.96) !important;
+}
+
+.qior-docs-dark .bg-\[\#f7f7f7\],
+.qior-docs-dark .bg-white,
+.qior-docs-dark .bg-zinc-50,
+.qior-docs-dark .bg-zinc-100 {
+  background: #18181b !important;
+}
+
+.qior-docs-dark .bg-zinc-200 {
+  background: #27272a !important;
+}
+
+.qior-docs-dark .border-zinc-200,
+.qior-docs-dark .border-zinc-300 {
+  border-color: #2f2f36 !important;
+}
+
+.qior-docs-dark .text-black,
+.qior-docs-dark .text-zinc-950 {
+  color: #f4f4f5 !important;
+}
+
+.qior-docs-dark .text-zinc-700,
+.qior-docs-dark .text-zinc-600 {
+  color: #c4c4cc !important;
+}
+
+.qior-docs-dark .text-zinc-500 {
+  color: #a1a1aa !important;
+}
+
+.qior-docs-dark .text-zinc-400 {
+  color: #8b8b95 !important;
+}
+
+.qior-docs-dark code:not(pre code) {
+  border-color: #3f3f46 !important;
+  background: #202024 !important;
+  color: #f4f4f5 !important;
+}
+
+.qior-docs-dark pre {
+  border-color: #34343b !important;
+  background: #0d1117 !important;
+  color: #f4f4f5 !important;
+}
+
+.qior-docs-dark pre code span.text-zinc-500 {
+  color: #8b949e !important;
+}
+
+.qior-docs-dark pre code span.text-violet-700 {
+  color: #d2a8ff !important;
+}
+
+.qior-docs-dark pre code span.text-amber-700 {
+  color: #ffa657 !important;
+}
+
+.qior-docs-dark pre code span.text-blue-700 {
+  color: #79c0ff !important;
+}
+
+.qior-docs-dark pre code span.text-rose-600 {
+  color: #ff7b72 !important;
+}
+
+.qior-docs-dark a:hover,
+.qior-docs-dark button:hover {
+  color: #ffffff !important;
+}
