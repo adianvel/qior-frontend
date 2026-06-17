@@ -6,7 +6,7 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { getAccount, getAssociatedTokenAddressSync, getMint } from "@solana/spl-token";
 import { useQueryClient } from "@tanstack/react-query";
-import { getProgram, createStreamTx } from "@/lib/anchor/program";
+import { cacheLegacyVestingMetadata, getProgram, createStreamTx } from "@/lib/anchor/program";
 import type { VestingType } from "@/lib/anchor/types";
 import { toRawTokenAmount } from "@/lib/utils/format";
 import { getTransactionErrorMessage, type TxStatus } from "@/lib/utils/transactions";
@@ -92,7 +92,7 @@ export function useCreateStream() {
 
       const totalAmount = new BN(totalAmountRaw.toString());
 
-      const { tx, signers } = await createStreamTx(program, wallet.publicKey, {
+      const { tx, signers, streamPDA } = await createStreamTx(program, wallet.publicKey, {
         streamId,
         recipient,
         mint,
@@ -109,6 +109,10 @@ export function useCreateStream() {
       const sig = await sendTransaction(tx, connection, { signers });
       setStatus("confirming");
       await connection.confirmTransaction(sig, "confirmed");
+      cacheLegacyVestingMetadata(streamPDA, {
+        vestingType: params.vestingType,
+        milestoneTime: params.milestoneTime,
+      });
       setSignature(sig);
       setStatus("success");
       await queryClient.invalidateQueries({ queryKey: ["streams"] });

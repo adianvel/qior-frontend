@@ -12,6 +12,11 @@ export const LEGACY_STREAM_ACCOUNT_SIZE = 196;
 const CREATE_STREAM_DISCRIMINATOR = [71, 188, 111, 127, 108, 40, 229, 158];
 const CREATE_STREAM_VESTING_TYPE_OFFSET = 8 + 8 + 32 + 8 + 8 + 8 + 8 + 1;
 const CREATE_STREAM_MILESTONE_TIME_OFFSET = CREATE_STREAM_VESTING_TYPE_OFFSET + 1;
+const LEGACY_VESTING_CACHE_PREFIX = `qior:${PROGRAM_ID_STRING}:legacy-vesting:v1`;
+
+type LegacyVestingMetadata = { vestingType: VestingType; milestoneTime: number };
+
+const legacyVestingMetadataCache = new Map<string, LegacyVestingMetadata>();
 
 export function getProvider(connection: Connection, wallet: AnchorWallet) {
   return new AnchorProvider(connection, wallet, { commitment: "confirmed" });
@@ -172,7 +177,7 @@ function readInstructionI64(data: Uint8Array, offset: number): number {
   return Number(view.getBigInt64(offset, true));
 }
 
-function readCreateStreamVestingMetadata(data: Uint8Array): { vestingType: VestingType; milestoneTime: number } | null {
+function readCreateStreamVestingMetadata(data: Uint8Array): LegacyVestingMetadata | null {
   if (data.length < CREATE_STREAM_MILESTONE_TIME_OFFSET + 8) return null;
 
   const hasCreateStreamDiscriminator = CREATE_STREAM_DISCRIMINATOR.every((byte, index) => data[index] === byte);
@@ -187,10 +192,60 @@ function readCreateStreamVestingMetadata(data: Uint8Array): { vestingType: Vesti
   return null;
 }
 
+function getLegacyVestingCacheKey(stream: PublicKey) {
+  return `${LEGACY_VESTING_CACHE_PREFIX}:${stream.toBase58()}`;
+}
+
+function readCachedLegacyVestingMetadata(stream: PublicKey): LegacyVestingMetadata | null {
+  const streamAddress = stream.toBase58();
+  const memoryValue = legacyVestingMetadataCache.get(streamAddress);
+  if (memoryValue) return memoryValue;
+
+  if (typeof window === "undefined") return null;
+
+  try {
+    const rawValue = window.localStorage.getItem(getLegacyVestingCacheKey(stream));
+    if (!rawValue) return null;
+
+    const parsed = JSON.parse(rawValue) as Partial<LegacyVestingMetadata>;
+    if (
+      (parsed.vestingType === "cliff" || parsed.vestingType === "linear" || parsed.vestingType === "milestone")
+      && typeof parsed.milestoneTime === "number"
+    ) {
+      const metadata = {
+        vestingType: parsed.vestingType,
+        milestoneTime: parsed.milestoneTime,
+      };
+      legacyVestingMetadataCache.set(streamAddress, metadata);
+      return metadata;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+export function cacheLegacyVestingMetadata(stream: PublicKey, metadata: LegacyVestingMetadata) {
+  const streamAddress = stream.toBase58();
+  legacyVestingMetadataCache.set(streamAddress, metadata);
+
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(getLegacyVestingCacheKey(stream), JSON.stringify(metadata));
+  } catch {
+    // Cache writes are best-effort; the dashboard can still recover through RPC.
+  }
+}
+
 export async function recoverLegacyVestingMetadata(
   connection: Connection,
   stream: PublicKey
-): Promise<{ vestingType: VestingType; milestoneTime: number } | null> {
+): Promise<LegacyVestingMetadata | null> {
+  const cachedMetadata = readCachedLegacyVestingMetadata(stream);
+  if (cachedMetadata) return cachedMetadata;
+
   const signatures = await connection.getSignaturesForAddress(stream, { limit: 10 });
 
   for (const signatureInfo of signatures) {
@@ -206,7 +261,10 @@ export async function recoverLegacyVestingMetadata(
       if (!programId?.equals(PROGRAM_ID)) continue;
 
       const vestingMetadata = readCreateStreamVestingMetadata(instruction.data);
-      if (vestingMetadata) return vestingMetadata;
+      if (vestingMetadata) {
+        cacheLegacyVestingMetadata(stream, vestingMetadata);
+        return vestingMetadata;
+      }
     }
   }
 
@@ -261,7 +319,7 @@ export async function createStreamTx(
     .signers([escrowTokenAccount])
     .transaction();
 
-  return { tx, signers: [escrowTokenAccount] };
+  return { tx, signers: [escrowTokenAccount], streamPDA };
 }
 
 function toAnchorVestingType(vestingType: VestingType) {
