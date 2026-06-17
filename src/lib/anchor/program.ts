@@ -7,6 +7,11 @@ import { PROGRAM_ID_STRING } from "@/lib/env";
 import type { StreamAccount, VestingType } from "./types";
 
 export const PROGRAM_ID = new PublicKey(PROGRAM_ID_STRING);
+export const LEGACY_STREAM_ACCOUNT_SIZE = 196;
+
+const CREATE_STREAM_DISCRIMINATOR = [71, 188, 111, 127, 108, 40, 229, 158];
+const CREATE_STREAM_VESTING_TYPE_OFFSET = 8 + 8 + 32 + 8 + 8 + 8 + 8 + 1;
+const CREATE_STREAM_MILESTONE_TIME_OFFSET = CREATE_STREAM_VESTING_TYPE_OFFSET + 1;
 
 export function getProvider(connection: Connection, wallet: AnchorWallet) {
   return new AnchorProvider(connection, wallet, { commitment: "confirmed" });
@@ -102,9 +107,11 @@ export function decodeStreamAccount(publicKey: PublicKey, data: Uint8Array): Str
     startTime: reader.readI64(),
     cliffTime: reader.readI64(),
     endTime: reader.readI64(),
-    cancelable: reader.readBool(),
-    canceled: reader.readBool(),
+    cancelable: false,
+    canceled: false,
     vestingType: "linear" as VestingType,
+    onChainVestingType: "linear" as VestingType,
+    vestingTypeSource: "account" as const,
     milestoneReached: false,
     milestoneTime: 0,
     bump: 0,
@@ -113,21 +120,97 @@ export function decodeStreamAccount(publicKey: PublicKey, data: Uint8Array): Str
   };
 
   const remaining = data.length - reader.offset;
-  if (remaining >= 20) {
+
+  // The devnet program has had a few Stream account layouts. Decode by the
+  // remaining bytes instead of assuming the newest enum layout for every account.
+  if (remaining >= 22) {
+    stream.cancelable = reader.readBool();
+    stream.canceled = reader.readBool();
     stream.vestingType = reader.readVestingType();
+    stream.onChainVestingType = stream.vestingType;
     stream.milestoneReached = reader.readBool();
     stream.milestoneTime = reader.readI64();
-  } else if (remaining >= 12) {
-    const legacyMilestoneBased = reader.readBool();
-    stream.vestingType = legacyMilestoneBased ? "milestone" : "linear";
-    stream.milestoneReached = reader.readBool();
+    stream.bump = reader.readU8();
+    stream.escrowBump = reader.readU8();
+    stream.createdAt = reader.readI64();
+
+    return stream;
   }
 
-  stream.bump = reader.readU8();
-  stream.escrowBump = reader.readU8();
-  stream.createdAt = reader.readI64();
+  if (remaining >= 14) {
+    stream.cancelable = reader.readBool();
+    stream.canceled = reader.readBool();
+    const legacyMilestoneBased = reader.readBool();
+    stream.vestingType = legacyMilestoneBased ? "milestone" : "linear";
+    stream.onChainVestingType = stream.vestingType;
+    stream.milestoneReached = reader.readBool();
+    stream.bump = reader.readU8();
+    stream.escrowBump = reader.readU8();
+    stream.createdAt = reader.readI64();
+
+    return stream;
+  }
+
+  if (remaining >= 12) {
+    stream.cancelable = reader.readBool();
+    const legacyMilestoneBased = reader.readBool();
+    stream.vestingType = legacyMilestoneBased ? "milestone" : "linear";
+    stream.onChainVestingType = stream.vestingType;
+    stream.milestoneReached = legacyMilestoneBased;
+    stream.bump = reader.readU8();
+    stream.escrowBump = reader.readU8();
+    stream.createdAt = reader.readI64();
+
+    return stream;
+  }
 
   return stream;
+}
+
+function readInstructionI64(data: Uint8Array, offset: number): number {
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  return Number(view.getBigInt64(offset, true));
+}
+
+function readCreateStreamVestingMetadata(data: Uint8Array): { vestingType: VestingType; milestoneTime: number } | null {
+  if (data.length < CREATE_STREAM_MILESTONE_TIME_OFFSET + 8) return null;
+
+  const hasCreateStreamDiscriminator = CREATE_STREAM_DISCRIMINATOR.every((byte, index) => data[index] === byte);
+  if (!hasCreateStreamDiscriminator) return null;
+
+  const value = data[CREATE_STREAM_VESTING_TYPE_OFFSET];
+  const milestoneTime = readInstructionI64(data, CREATE_STREAM_MILESTONE_TIME_OFFSET);
+  if (value === 0) return { vestingType: "cliff", milestoneTime };
+  if (value === 1) return { vestingType: "linear", milestoneTime };
+  if (value === 2) return { vestingType: "milestone", milestoneTime };
+
+  return null;
+}
+
+export async function recoverLegacyVestingMetadata(
+  connection: Connection,
+  stream: PublicKey
+): Promise<{ vestingType: VestingType; milestoneTime: number } | null> {
+  const signatures = await connection.getSignaturesForAddress(stream, { limit: 10 });
+
+  for (const signatureInfo of signatures) {
+    const tx = await connection.getTransaction(signatureInfo.signature, {
+      commitment: "confirmed",
+      maxSupportedTransactionVersion: 0,
+    });
+    if (!tx) continue;
+
+    const accountKeys = tx.transaction.message.staticAccountKeys;
+    for (const instruction of tx.transaction.message.compiledInstructions) {
+      const programId = accountKeys[instruction.programIdIndex];
+      if (!programId?.equals(PROGRAM_ID)) continue;
+
+      const vestingMetadata = readCreateStreamVestingMetadata(instruction.data);
+      if (vestingMetadata) return vestingMetadata;
+    }
+  }
+
+  return null;
 }
 
 export async function createStreamTx(
