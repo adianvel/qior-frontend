@@ -10,7 +10,7 @@ import { ArrowLeft, CircleAlert, CircleCheck, Copy, ExternalLink, LoaderCircle }
 import { AmountBreakdownBar } from "@/components/dashboard/AmountBreakdownBar";
 import { StreamStatusBadge } from "@/components/dashboard/StreamStatusBadge";
 import { StreamTimeline } from "@/components/dashboard/StreamTimeline";
-import { decodeStreamAccount } from "@/lib/anchor/program";
+import { decodeStreamAccount, LEGACY_STREAM_ACCOUNT_SIZE, recoverLegacyVestingMetadata } from "@/lib/anchor/program";
 import type { StreamAccount } from "@/lib/anchor/types";
 import { useCloseStream } from "@/hooks/useCloseStream";
 import { useCancelStream } from "@/hooks/useCancelStream";
@@ -46,7 +46,18 @@ export default function StreamDetailPage() {
       const account = await connection.getAccountInfo(streamPublicKey);
       if (!account) throw new Error("Stream account not found");
 
-      return decodeStreamAccount(streamPublicKey, account.data);
+      const decodedStream = decodeStreamAccount(streamPublicKey, account.data);
+
+      if (account.data.length === LEGACY_STREAM_ACCOUNT_SIZE) {
+        const recoveredVestingMetadata = await recoverLegacyVestingMetadata(connection, streamPublicKey);
+        if (recoveredVestingMetadata) {
+          decodedStream.vestingType = recoveredVestingMetadata.vestingType;
+          decodedStream.milestoneTime = recoveredVestingMetadata.milestoneTime;
+          decodedStream.vestingTypeSource = "createTransaction";
+        }
+      }
+
+      return decodedStream;
     },
     enabled: !!wallet?.publicKey && !!params.streamId,
     retry: 1,
@@ -81,12 +92,14 @@ export default function StreamDetailPage() {
   const claimable = lifecycle.breakdown.claimable;
   const isCreator = publicKey?.equals(stream.creator);
   const isRecipient = publicKey?.equals(stream.recipient);
+  const canSetMilestoneOnChain = lifecycle.mode === "milestone" && stream.onChainVestingType === "milestone";
+  const isRecoveredLegacyMilestone = lifecycle.mode === "milestone" && !canSetMilestoneOnChain;
   const withdrawBusy = isProcessingStream(stream.publicKey);
   const withdrawPending = withdrawStatus === "preparing" || withdrawStatus === "awaiting_signature" || withdrawStatus === "confirming";
   const withdrawSucceeded = withdrawStatus === "success" && activeStreamId === stream.publicKey.toBase58();
   const hasPrimaryActions = Boolean(
     isRecipient
-    || (isCreator && lifecycle.mode === "milestone" && !stream.milestoneReached && !stream.canceled)
+    || (isCreator && canSetMilestoneOnChain && !stream.milestoneReached && !stream.canceled)
     || (isCreator && stream.cancelable && lifecycle.status !== "cancelled" && !lifecycle.readyToClose)
     || (isCreator && lifecycle.readyToClose)
   );
@@ -103,6 +116,7 @@ export default function StreamDetailPage() {
 
   const getCreatorActionMessage = () => {
     if (lifecycle.readyToClose) return "This stream lifecycle is already settled.";
+    if (isRecoveredLegacyMilestone) return "This stream was created against the legacy devnet program, so milestone confirmation cannot be submitted until the program is redeployed and the stream is recreated.";
     if (lifecycle.status === "awaiting_milestone") return lifecycle.mode === "milestone"
       ? "The creator can mark the milestone reached. Recipient withdrawal still waits for the milestone gate time."
       : "Creator follow-up is needed when the milestone is actually completed.";
@@ -214,7 +228,9 @@ export default function StreamDetailPage() {
               {stream.milestoneReached ? "Milestone reached" : "Milestone pending"}
             </p>
             <p className="mt-1 text-sm text-amber-700">
-              {stream.milestoneReached
+              {isRecoveredLegacyMilestone
+                ? "The UI recovered this milestone type from the create transaction, but the current on-chain account is legacy linear storage. Recreate it after the updated program is deployed before marking a milestone reached."
+                : stream.milestoneReached
                 ? "The creator has marked this milestone as complete, so recipient withdrawal depends on remaining claimable balance."
                 : "No vesting is unlocked yet because this stream waits for explicit milestone completion."}
             </p>
@@ -342,7 +358,7 @@ export default function StreamDetailPage() {
                 )}
               </button>
             ) : null}
-            {isCreator && lifecycle.mode === "milestone" && !stream.milestoneReached && !stream.canceled ? (
+            {isCreator && canSetMilestoneOnChain && !stream.milestoneReached && !stream.canceled ? (
               <button
                 onClick={() => setMilestone(stream.publicKey)}
                 disabled={milestoneStatus === "preparing" || milestoneStatus === "awaiting_signature" || milestoneStatus === "confirming"}
