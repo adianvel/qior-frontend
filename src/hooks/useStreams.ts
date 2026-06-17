@@ -9,6 +9,7 @@ import {
   PROGRAM_ID,
   recoverLegacyVestingMetadata,
 } from "@/lib/anchor/program";
+import { IS_LEGACY_RECOVERY_ENABLED } from "@/lib/env";
 import type { StreamAccount } from "@/lib/anchor/types";
 
 export function useStreams(role: "creator" | "recipient") {
@@ -34,7 +35,7 @@ export function useStreams(role: "creator" | "recipient") {
       return accounts.map((acc) => {
         const stream = decodeStreamAccount(acc.pubkey, acc.account.data);
 
-        if (acc.account.data.length === LEGACY_STREAM_ACCOUNT_SIZE) {
+        if (IS_LEGACY_RECOVERY_ENABLED && acc.account.data.length === LEGACY_STREAM_ACCOUNT_SIZE) {
           const cachedVestingMetadata = getCachedLegacyVestingMetadata(acc.pubkey);
           if (cachedVestingMetadata) {
             stream.vestingType = cachedVestingMetadata.vestingType;

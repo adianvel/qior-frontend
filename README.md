@@ -1,6 +1,6 @@
 # Qior Frontend
 
-Frontend for **Qior**, a Solana token vesting and distribution platform. Qior lets creators lock SPL tokens in escrow and release them to recipients through cliff, linear, or milestone-based vesting schedules on Solana devnet.
+Frontend for **Qior**, a Solana token vesting and distribution platform. Qior lets creators lock SPL tokens in escrow and release them to recipients through cliff, linear, or milestone-based vesting schedules on Solana.
 
 ## Documentation
 
@@ -57,6 +57,16 @@ NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
 Use a Helius devnet RPC endpoint from [helius.dev](https://www.helius.dev/) for better reliability. The frontend does not provide fallback values for these variables.
 
 For the current Qior devnet deployment, use `BiwY71TrdBzgv2yfa6KfUxUMY8UCpeiUMGnwmCMTsfs9` as `NEXT_PUBLIC_PROGRAM_ID`.
+
+For mainnet deployment, use the final mainnet program ID and a dedicated mainnet RPC endpoint:
+
+```bash
+NEXT_PUBLIC_SOLANA_CLUSTER=mainnet-beta
+NEXT_PUBLIC_PROGRAM_ID=YOUR_MAINNET_PROGRAM_ID
+NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY
+```
+
+Mainnet streams are expected to use the final account layout that stores `vestingType` and `milestoneTime` directly. The devnet-only legacy transaction recovery fallback is disabled on mainnet to avoid dashboard N+1 transaction-history RPC calls.
 
 ## Getting Started
 

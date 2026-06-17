@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { SOLANA_CLUSTER } from "@/lib/env";
+import { IS_MAINNET, SOLANA_CLUSTER } from "@/lib/env";
 import {
   getStreamClaimableAmount,
   getStreamLifecycleStatus,
@@ -125,9 +125,13 @@ export function getStreamStatus(stream: {
 }
 
 export function explorerUrl(signature: string, cluster = SOLANA_CLUSTER): string {
-  return `https://explorer.solana.com/tx/${signature}?cluster=${cluster}`;
+  const clusterQuery = IS_MAINNET || cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+
+  return `https://explorer.solana.com/tx/${signature}${clusterQuery}`;
 }
 
 export function explorerAccountUrl(address: string | PublicKey, cluster = SOLANA_CLUSTER): string {
-  return `https://explorer.solana.com/address/${address.toString()}?cluster=${cluster}`;
+  const clusterQuery = IS_MAINNET || cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+
+  return `https://explorer.solana.com/address/${address.toString()}${clusterQuery}`;
 }
