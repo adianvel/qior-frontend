@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { getMint } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, unpackMint } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
@@ -16,12 +16,17 @@ export function useMintDecimals(mints: Array<PublicKey | undefined>) {
   return useQuery<Record<string, number>>({
     queryKey: ["mint-decimals", mintAddresses],
     queryFn: async () => {
-      const entries = await Promise.all(
-        mintAddresses.map(async (address) => {
-          const mint = await getMint(connection, new PublicKey(address));
-          return [address, mint.decimals] as const;
-        })
-      );
+      const mintPublicKeys = mintAddresses.map((address) => new PublicKey(address));
+      const mintAccounts = await connection.getMultipleAccountsInfo(mintPublicKeys);
+
+      const entries = mintAccounts.flatMap((account, index) => {
+        if (!account) return [];
+
+        const address = mintAddresses[index];
+        const mint = unpackMint(mintPublicKeys[index], account, TOKEN_PROGRAM_ID);
+
+        return [[address, mint.decimals] as const];
+      });
 
       return Object.fromEntries(entries);
     },
