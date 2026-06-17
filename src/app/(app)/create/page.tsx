@@ -179,7 +179,7 @@ export default function CreateStreamPage() {
   const getTimePart = (value: string) => value.split("T")[1] ?? "";
   const updateGuardedDatePart = (value: string, date: string) => {
     const existingTime = getTimePart(value);
-    const fallbackTime = isInputDateToday(date) ? formatInputTime(new Date()) : "00:00";
+    const fallbackTime = isInputDateToday(date) ? formatInputTime(getBufferedNow()) : "00:00";
 
     return `${date}T${existingTime || fallbackTime}`;
   };
@@ -614,7 +614,7 @@ function ScheduleDateTimeField({
                 onNowChange();
                 setCalendarOpen(false);
                 setTimeOpen(false);
-                setTimeDraft(formatInputTime(new Date()));
+                setTimeDraft(formatInputTime(getBufferedNow()));
                 setTimeEditing(false);
               }}
               className="ml-auto cursor-pointer rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 transition-colors hover:border-violet-200 hover:bg-violet-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-500/15"
@@ -826,8 +826,15 @@ function formatInputTime(date: Date) {
   return `${hour}:${minute}`;
 }
 
-function formatScheduleInputNow() {
+function getBufferedNow() {
   const now = new Date();
+  now.setMinutes(now.getMinutes() + 1, 0, 0);
+
+  return now;
+}
+
+function formatScheduleInputNow() {
+  const now = getBufferedNow();
 
   return `${formatInputDate(now)}T${formatInputTime(now)}`;
 }
