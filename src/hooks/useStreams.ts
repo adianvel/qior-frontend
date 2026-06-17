@@ -2,7 +2,12 @@
 
 import { useConnection, useAnchorWallet } from "@solana/wallet-adapter-react";
 import { useQuery } from "@tanstack/react-query";
-import { decodeStreamAccount, PROGRAM_ID } from "@/lib/anchor/program";
+import {
+  decodeStreamAccount,
+  LEGACY_STREAM_ACCOUNT_SIZE,
+  PROGRAM_ID,
+  recoverLegacyVestingMetadata,
+} from "@/lib/anchor/program";
 import type { StreamAccount } from "@/lib/anchor/types";
 
 export function useStreams(role: "creator" | "recipient") {
@@ -23,7 +28,20 @@ export function useStreams(role: "creator" | "recipient") {
         ],
       });
 
-      return accounts.map((acc) => decodeStreamAccount(acc.pubkey, acc.account.data));
+      return Promise.all(accounts.map(async (acc) => {
+        const stream = decodeStreamAccount(acc.pubkey, acc.account.data);
+
+        if (acc.account.data.length === LEGACY_STREAM_ACCOUNT_SIZE) {
+          const recoveredVestingMetadata = await recoverLegacyVestingMetadata(connection, acc.pubkey);
+          if (recoveredVestingMetadata) {
+            stream.vestingType = recoveredVestingMetadata.vestingType;
+            stream.milestoneTime = recoveredVestingMetadata.milestoneTime;
+            stream.vestingTypeSource = "createTransaction";
+          }
+        }
+
+        return stream;
+      }));
     },
     enabled: !!wallet?.publicKey,
     placeholderData: [],
