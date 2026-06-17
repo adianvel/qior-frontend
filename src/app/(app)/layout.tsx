@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -18,10 +18,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { connected, disconnect } = useWallet();
   const [contentScrolled, setContentScrolled] = useState(false);
+  const contentScrolledRef = useRef(false);
+
+  const handleContentScroll = (event: React.UIEvent<HTMLElement>) => {
+    const nextScrolled = event.currentTarget.scrollTop > 8;
+    if (contentScrolledRef.current === nextScrolled) return;
+
+    contentScrolledRef.current = nextScrolled;
+    setContentScrolled(nextScrolled);
+  };
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-[#f3f2f6] text-zinc-950">
-      <aside className="hidden h-[100dvh] w-[268px] shrink-0 overflow-hidden border-r border-zinc-200/80 bg-white/90 px-4 py-4 shadow-[1px_0_0_rgba(24,24,27,0.03)] backdrop-blur md:flex md:flex-col">
+      <aside className="hidden h-[100dvh] w-[268px] shrink-0 overflow-hidden border-r border-zinc-200/80 bg-white px-4 py-4 shadow-[1px_0_0_rgba(24,24,27,0.03)] md:flex md:flex-col">
         <Link href="/" className="mb-5 flex h-10 items-center gap-3 rounded-2xl px-3">
           <Image src="/logo-qior.avif" alt="Qior" width={82} height={28} className="h-7 w-auto" priority />
           <span className="text-lg font-semibold tracking-tight text-zinc-950">Qior</span>
@@ -63,9 +72,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className={`absolute inset-x-0 top-0 z-30 flex items-center justify-between border-b px-5 py-3.5 backdrop-blur-2xl transition-all duration-200 md:px-8 ${
+        <header className={`absolute inset-x-0 top-0 z-30 flex items-center justify-between border-b px-5 py-3.5 transition-colors duration-200 md:px-8 ${
           contentScrolled
-            ? "border-white/25 bg-white/18 shadow-[0_14px_40px_rgba(24,24,27,0.08)] backdrop-saturate-150 supports-[backdrop-filter]:bg-white/12"
+            ? "border-zinc-200/60 bg-white/72 shadow-[0_10px_28px_rgba(24,24,27,0.06)] backdrop-blur-sm"
             : "border-zinc-200/80 bg-white/82"
         }`}>
           <div className="flex items-center gap-4 md:hidden">
@@ -79,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         <main
-          onScroll={(event) => setContentScrolled(event.currentTarget.scrollTop > 8)}
+          onScroll={handleContentScroll}
           className="flex-1 overflow-y-auto p-4 pb-28 pt-24 md:p-8 md:pt-28"
         >
           {!connected ? (
@@ -102,7 +111,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
 
         {connected ? (
-          <nav className="absolute inset-x-3 bottom-3 z-40 grid grid-cols-3 gap-1 rounded-[24px] border border-zinc-200/80 bg-white/88 p-1.5 shadow-[0_18px_60px_rgba(24,24,27,0.16)] backdrop-blur-2xl md:hidden">
+          <nav className="absolute inset-x-3 bottom-3 z-40 grid grid-cols-3 gap-1 rounded-[24px] border border-zinc-200/80 bg-white/94 p-1.5 shadow-[0_12px_36px_rgba(24,24,27,0.12)] backdrop-blur-sm md:hidden">
             {navItems.map((item) => {
               const active = pathname === item.href;
               return (

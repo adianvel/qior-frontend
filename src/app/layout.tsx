@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Qior — Token Distribution Protocol",
   description: "Lock SPL tokens in escrow with linear vesting on Solana.",
+  icons: {
+    icon: [{ url: "/logo-qior.avif", type: "image/avif" }],
+    shortcut: "/logo-qior.avif",
+    apple: "/logo-qior.avif",
+  },
 };
 
 export default function RootLayout({
