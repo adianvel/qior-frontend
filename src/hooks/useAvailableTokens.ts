@@ -5,6 +5,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { type ParsedAccountData } from "@solana/web3.js";
 import { useQuery } from "@tanstack/react-query";
+import { IS_MAINNET, SOLANA_CLUSTER } from "@/lib/env";
 
 export const USDC_DEV_MINT = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
 export const USDC_DEV_FAUCET_URL = "https://spl-token-faucet.com/?token-name=USDC-Dev";
@@ -47,6 +48,8 @@ const curatedTokens: TokenOption[] = [
     name: "USDC-Dev faucet token",
     decimals: 6,
     source: "curated",
+    disabled: IS_MAINNET,
+    badge: IS_MAINNET ? "Devnet" : undefined,
   },
   {
     mint: USDC_MAINNET_MINT,
@@ -54,8 +57,8 @@ const curatedTokens: TokenOption[] = [
     name: "USDC mainnet",
     decimals: 6,
     source: "curated",
-    disabled: true,
-    badge: "Mainnet",
+    disabled: !IS_MAINNET,
+    badge: IS_MAINNET ? undefined : "Mainnet",
   },
   {
     mint: BASE_SOON_MINT,
@@ -145,7 +148,7 @@ export function useAvailableTokens() {
   const { publicKey } = useWallet();
 
   const walletTokensQuery = useQuery({
-    queryKey: ["available-tokens", publicKey?.toBase58()],
+    queryKey: ["available-tokens", SOLANA_CLUSTER, publicKey?.toBase58()],
     queryFn: async () => {
       if (!publicKey) return [];
 
@@ -185,8 +188,8 @@ export function useAvailableTokens() {
     return Array.from(tokens.values()).sort((a, b) => {
       if (a.mint === WRAPPED_SOL_MINT) return -1;
       if (b.mint === WRAPPED_SOL_MINT) return 1;
-      if (a.mint === USDC_DEV_MINT) return -1;
-      if (b.mint === USDC_DEV_MINT) return 1;
+      if (a.mint === USDC_MAINNET_MINT || a.mint === USDC_DEV_MINT) return -1;
+      if (b.mint === USDC_MAINNET_MINT || b.mint === USDC_DEV_MINT) return 1;
       return a.symbol.localeCompare(b.symbol);
       });
     },
@@ -209,8 +212,8 @@ export function useAvailableTokens() {
       if (a.source !== b.source) return a.source === "wallet" ? -1 : 1;
       if (a.mint === WRAPPED_SOL_MINT) return -1;
       if (b.mint === WRAPPED_SOL_MINT) return 1;
-      if (a.mint === USDC_DEV_MINT) return -1;
-      if (b.mint === USDC_DEV_MINT) return 1;
+      if (a.mint === USDC_MAINNET_MINT || a.mint === USDC_DEV_MINT) return -1;
+      if (b.mint === USDC_MAINNET_MINT || b.mint === USDC_DEV_MINT) return 1;
       return a.symbol.localeCompare(b.symbol);
     });
   }, [walletTokensQuery.data]);

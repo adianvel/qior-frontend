@@ -23,6 +23,7 @@ import {
   formatTokenAmount,
   formatTokenAmountCompact,
 } from "@/lib/utils/format";
+import { IS_LEGACY_RECOVERY_ENABLED, SOLANA_CLUSTER } from "@/lib/env";
 import { deriveStreamLifecycle, getModeLabel } from "@/lib/utils/streamLifecycle";
 
 export default function StreamDetailPage() {
@@ -48,7 +49,7 @@ export default function StreamDetailPage() {
 
       const decodedStream = decodeStreamAccount(streamPublicKey, account.data);
 
-      if (account.data.length === LEGACY_STREAM_ACCOUNT_SIZE) {
+      if (IS_LEGACY_RECOVERY_ENABLED && account.data.length === LEGACY_STREAM_ACCOUNT_SIZE) {
         const recoveredVestingMetadata = await recoverLegacyVestingMetadata(connection, streamPublicKey);
         if (recoveredVestingMetadata) {
           decodedStream.vestingType = recoveredVestingMetadata.vestingType;
@@ -78,7 +79,7 @@ export default function StreamDetailPage() {
         <CircleAlert size={48} strokeWidth={1.75} className="text-red-400" />
         <h1 className="text-xl font-semibold text-zinc-900">Stream not found</h1>
         <p className="max-w-sm text-sm text-zinc-500">
-          This stream account could not be loaded from devnet.
+          This stream account could not be loaded from {SOLANA_CLUSTER}.
         </p>
         <Link href="/dashboard/creator" className="text-sm font-medium text-violet-600 hover:text-violet-500">
           Back to streams
@@ -116,7 +117,7 @@ export default function StreamDetailPage() {
 
   const getCreatorActionMessage = () => {
     if (lifecycle.readyToClose) return "This stream lifecycle is already settled.";
-    if (isRecoveredLegacyMilestone) return "This stream was created against the legacy devnet program, so milestone confirmation cannot be submitted until the program is redeployed and the stream is recreated.";
+    if (isRecoveredLegacyMilestone) return "This stream was created against the legacy program, so milestone confirmation cannot be submitted until the program is redeployed and the stream is recreated.";
     if (lifecycle.status === "awaiting_milestone") return lifecycle.mode === "milestone"
       ? "The creator can mark the milestone reached. Recipient withdrawal still waits for the milestone gate time."
       : "Creator follow-up is needed when the milestone is actually completed.";

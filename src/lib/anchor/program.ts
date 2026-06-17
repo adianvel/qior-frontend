@@ -17,6 +17,7 @@ const LEGACY_VESTING_CACHE_PREFIX = `qior:${PROGRAM_ID_STRING}:legacy-vesting:v1
 type LegacyVestingMetadata = { vestingType: VestingType; milestoneTime: number };
 
 const legacyVestingMetadataCache = new Map<string, LegacyVestingMetadata>();
+const legacyVestingMetadataRequests = new Map<string, Promise<LegacyVestingMetadata | null>>();
 
 export function getProvider(connection: Connection, wallet: AnchorWallet) {
   return new AnchorProvider(connection, wallet, { commitment: "confirmed" });
@@ -196,7 +197,7 @@ function getLegacyVestingCacheKey(stream: PublicKey) {
   return `${LEGACY_VESTING_CACHE_PREFIX}:${stream.toBase58()}`;
 }
 
-function readCachedLegacyVestingMetadata(stream: PublicKey): LegacyVestingMetadata | null {
+export function getCachedLegacyVestingMetadata(stream: PublicKey): LegacyVestingMetadata | null {
   const streamAddress = stream.toBase58();
   const memoryValue = legacyVestingMetadataCache.get(streamAddress);
   if (memoryValue) return memoryValue;
@@ -243,32 +244,43 @@ export async function recoverLegacyVestingMetadata(
   connection: Connection,
   stream: PublicKey
 ): Promise<LegacyVestingMetadata | null> {
-  const cachedMetadata = readCachedLegacyVestingMetadata(stream);
+  const cachedMetadata = getCachedLegacyVestingMetadata(stream);
   if (cachedMetadata) return cachedMetadata;
 
-  const signatures = await connection.getSignaturesForAddress(stream, { limit: 10 });
+  const streamAddress = stream.toBase58();
+  const existingRequest = legacyVestingMetadataRequests.get(streamAddress);
+  if (existingRequest) return existingRequest;
 
-  for (const signatureInfo of signatures) {
-    const tx = await connection.getTransaction(signatureInfo.signature, {
-      commitment: "confirmed",
-      maxSupportedTransactionVersion: 0,
-    });
-    if (!tx) continue;
+  const request = (async () => {
+    const signatures = await connection.getSignaturesForAddress(stream, { limit: 10 });
 
-    const accountKeys = tx.transaction.message.staticAccountKeys;
-    for (const instruction of tx.transaction.message.compiledInstructions) {
-      const programId = accountKeys[instruction.programIdIndex];
-      if (!programId?.equals(PROGRAM_ID)) continue;
+    for (const signatureInfo of signatures) {
+      const tx = await connection.getTransaction(signatureInfo.signature, {
+        commitment: "confirmed",
+        maxSupportedTransactionVersion: 0,
+      });
+      if (!tx) continue;
 
-      const vestingMetadata = readCreateStreamVestingMetadata(instruction.data);
-      if (vestingMetadata) {
-        cacheLegacyVestingMetadata(stream, vestingMetadata);
-        return vestingMetadata;
+      const accountKeys = tx.transaction.message.staticAccountKeys;
+      for (const instruction of tx.transaction.message.compiledInstructions) {
+        const programId = accountKeys[instruction.programIdIndex];
+        if (!programId?.equals(PROGRAM_ID)) continue;
+
+        const vestingMetadata = readCreateStreamVestingMetadata(instruction.data);
+        if (vestingMetadata) {
+          cacheLegacyVestingMetadata(stream, vestingMetadata);
+          return vestingMetadata;
+        }
       }
     }
-  }
 
-  return null;
+    return null;
+  })().finally(() => {
+    legacyVestingMetadataRequests.delete(streamAddress);
+  });
+
+  legacyVestingMetadataRequests.set(streamAddress, request);
+  return request;
 }
 
 export async function createStreamTx(
